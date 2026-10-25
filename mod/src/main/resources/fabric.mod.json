@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "pocketclient",
+	"version": "${version}",
+	"name": "Pocket Client",
+	"description": "Client-side HUD, CPS counter, keystrokes, toggle sprint and a performance preset. Built for phones (Zalith / PojavLauncher) but works anywhere.",
+	"authors": [
+		"Adam"
+	],
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.pocketclient.PocketClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "pocketclient.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
