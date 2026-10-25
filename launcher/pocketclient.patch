@@ -975,6 +975,1284 @@ index ae5ab31..45262c1 100644
          if (Renderers.INSTANCE.isCurrentRendererValid()) userArgs.add("-Dorg.lwjgl.opengl.libname=" + loadGraphicsLibrary());
  
          // Force LWJGL to use the Freetype library intended for it, instead of using the one
+diff --git a/ZalithLauncher/src/main/res/layout-port/activity_error.xml b/ZalithLauncher/src/main/res/layout-port/activity_error.xml
+new file mode 100644
+index 0000000..fc57f9d
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/activity_error.xml
+@@ -0,0 +1,44 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:id="@+id/background" android:layout_width="match_parent" android:layout_height="match_parent">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/top_view" android:layout_width="match_parent" android:layout_height="@dimen/_35sdp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++        <TextView android:id="@+id/error_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/menu_bar_text" android:textSize="@dimen/_16ssp" android:textStyle="bold" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <TextView android:id="@+id/center_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="@dimen/_32ssp" android:textStyle="bold" android:textColor="@android:color/holo_red_dark" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/constraintLayout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/top_view" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/constraintLayout2">
++
++        <ScrollView android:id="@+id/scroll_view" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_margin="@dimen/_12sdp" android:padding="@dimen/_12sdp" android:background="@drawable/background_card" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content">
++
++                <TextView android:id="@+id/error_text" android:text="Error" android:textSize="@dimen/_12ssp" android:layout_width="0dp" android:layout_height="wrap_content" android:textColor="@color/black_or_white" tools:ignore="HardcodedText" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++                <TextView android:id="@+id/error_tip" android:text="@string/game_exit_note" android:textSize="@dimen/_12ssp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:textColor="@color/black_or_white" android:visibility="gone" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/error_text"/>
++
++                <TextView android:id="@+id/error_no_screenshot" android:text="@string/game_exit_no_screenshot" android:textSize="@dimen/_12ssp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:textColor="#BD0B0B" android:textStyle="bold" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/error_tip"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++        </ScrollView>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <View android:id="@+id/shadowView" android:layout_width="@dimen/_4sdp" android:layout_height="0dp" android:layout_marginStart="@dimen/_minus4sdp" android:background="@drawable/shadow_gradient_right" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toEndOf="@id/constraintLayout" app:layout_constraintTop_toBottomOf="@+id/top_view" android:visibility="gone"/>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/constraintLayout2" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/error_auto_fix" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:text="@string/pc_auto_fix" android:visibility="gone" app:layout_constraintBottom_toTopOf="@id/share_log"/>
++
++        <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/share_log" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:text="@string/main_share_logs" app:layout_constraintBottom_toTopOf="@id/error_restart"/>
++
++        <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/error_restart" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:text="@string/generic_restart" app:layout_constraintBottom_toTopOf="@id/error_confirm"/>
++
++        <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/error_confirm" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:text="@string/generic_confirm" app:layout_constraintBottom_toBottomOf="parent"/>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <View android:id="@+id/shadowView2" android:layout_width="0dp" android:layout_height="@dimen/_4sdp" android:background="@drawable/shadow_gradient_down" app:layout_constraintEnd_toEndOf="@+id/top_view" app:layout_constraintStart_toStartOf="@+id/top_view" app:layout_constraintTop_toBottomOf="@+id/top_view"/>
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_account.xml b/ZalithLauncher/src/main/res/layout-port/fragment_account.xml
+new file mode 100644
+index 0000000..32b7b9c
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_account.xml
+@@ -0,0 +1,49 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:id="@+id/fragment_menu_main" android:layout_width="fill_parent" android:layout_height="fill_parent" android:background="@android:color/transparent" android:gravity="top" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/account_menu" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operation_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/account_type_layout" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_12sdp" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent">
++
++            <com.angcyo.tablayout.DslTabLayout android:id="@+id/account_type_tab" android:layout_width="0dp" android:layout_height="wrap_content" android:paddingVertical="@dimen/_4sdp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toStartOf="@id/add_server" app:tab_deselect_color="@color/black_or_white" app:tab_select_color="@color/black_or_white">
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:id="@+id/add_microsoft_account" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="@dimen/_8sdp">
++
++                    <ImageView android:id="@+id/add_microsoft_image" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:src="@drawable/ic_add" tools:ignore="ContentDescription"/>
++
++                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_toEndOf="@id/add_microsoft_image" android:paddingHorizontal="@dimen/_8sdp" android:text="@string/account_microsoft_account"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:id="@+id/add_local_account" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="@dimen/_8sdp">
++
++                    <ImageView android:id="@+id/add_local_image" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:src="@drawable/ic_add" tools:ignore="ContentDescription"/>
++
++                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_toEndOf="@id/add_local_image" android:paddingHorizontal="@dimen/_8sdp" android:text="@string/account_local_account"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            </com.angcyo.tablayout.DslTabLayout>
++
++            <ImageView android:id="@+id/add_server" android:layout_width="@dimen/_24sdp" android:layout_height="@dimen/_24sdp" android:layout_marginEnd="@dimen/_8sdp" android:scaleType="centerCrop" android:scaleX="0.92" android:scaleY="0.92" android:background="?android:attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_more" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" tools:ignore="ContentDescription"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++        <androidx.recyclerview.widget.RecyclerView android:id="@+id/accounts_recycler" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginVertical="@dimen/_12sdp" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:paddingHorizontal="@dimen/_8sdp" android:paddingVertical="@dimen/_4sdp" android:background="@drawable/background_card" app:layout_constraintTop_toBottomOf="@id/account_type_layout" app:layout_constraintBottom_toBottomOf="parent"/>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operation_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operation_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/return_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:text="@string/generic_return" android:textAllCaps="true" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" tools:ignore="MissingConstraints"/>
++
++            <include android:id="@+id/view_account" layout="@layout/view_account" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toTopOf="@id/return_button" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_control_manager.xml b/ZalithLauncher/src/main/res/layout-port/fragment_control_manager.xml
+new file mode 100644
+index 0000000..ab12ad3
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_control_manager.xml
+@@ -0,0 +1,29 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/control_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recycler_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:paddingVertical="@dimen/_4sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_view"/>
++
++            <TextView android:id="@+id/nothing_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:text="@string/controls_nothing" android:background="@drawable/background_item" android:padding="@dimen/_12sdp" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <TextView android:id="@+id/title_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:text="@string/custom_control_title" android:textColor="@color/primary_text" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <TextView android:id="@+id/set_default_tip" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/_12sdp" android:text="@string/controls_tip_set_default" app:layout_constraintTop_toTopOf="parent"/>
++
++            <include android:id="@+id/operate_view" layout="@layout/view_file_action_bar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_26sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_controller_remapper.xml b/ZalithLauncher/src/main/res/layout-port/fragment_controller_remapper.xml
+new file mode 100644
+index 0000000..3926fa0
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_controller_remapper.xml
+@@ -0,0 +1,30 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/controller_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <androidx.recyclerview.widget.RecyclerView android:id="@+id/gamepad_remapper_recycler" android:layout_width="match_parent" android:layout_height="0dp" android:padding="@dimen/_8sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/back_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_4sdp" android:layout_marginBottom="@dimen/_8sdp" android:text="@string/generic_return" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++            <LinearLayout android:id="@+id/gamepad_remapper_mode_container" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:orientation="horizontal" app:layout_constraintBottom_toTopOf="@+id/back_button" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++
++                <TextView android:id="@+id/gamepad_remapper_mode_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:text="@string/controller_remapper_operating_mode" android:textColor="?android:attr/textColorPrimary"/>
++
++                <Spinner android:id="@+id/gamepad_remapper_mode_spinner" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="@dimen/_24sdp"/>
++            </LinearLayout>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_custom_background.xml b/ZalithLauncher/src/main/res/layout-port/fragment_custom_background.xml
+new file mode 100644
+index 0000000..6e07504
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_custom_background.xml
+@@ -0,0 +1,29 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/background_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <com.google.android.material.tabs.TabLayout android:id="@+id/tab_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:background="@drawable/background_item" android:padding="@dimen/_4sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:tabGravity="fill" app:tabIndicatorColor="@color/menu_progress" app:tabIndicatorHeight="@dimen/_3sdp" app:tabMode="fixed"/>
++
++            <com.movtery.zalithlauncher.ui.subassembly.filelist.FileRecyclerView android:id="@+id/file_recycler_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:paddingTop="@dimen/_8sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/tab_layout"/>
++
++            <TextView android:id="@+id/nothing_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/custom_background_nothing" android:background="@drawable/background_item" android:padding="@dimen/_12sdp" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <include android:id="@+id/action_bar" layout="@layout/view_file_action_bar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_26sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++            <ImageView android:id="@+id/preview" android:layout_width="0dp" android:layout_height="@dimen/_120sdp" android:layout_marginTop="@dimen/_45sdp" android:layout_marginHorizontal="@dimen/_24sdp" app:layout_constraintEnd_toEndOf="@+id/operate_main_layout" app:layout_constraintStart_toStartOf="@+id/operate_main_layout" app:layout_constraintTop_toTopOf="@+id/operate_main_layout" tools:srcCompat="@tools:sample/avatars" tools:ignore="ContentDescription"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_custom_mouse.xml b/ZalithLauncher/src/main/res/layout-port/fragment_custom_mouse.xml
+new file mode 100644
+index 0000000..6e86fe6
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_custom_mouse.xml
+@@ -0,0 +1,27 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/mouse_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recycler_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:scrollbars="vertical" android:scrollbarThumbVertical="@color/background_menu_element" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_view"/>
++
++            <TextView android:id="@+id/title_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:text="@string/custom_mouse_title" android:textColor="@color/primary_text" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <include android:id="@+id/action_bar" layout="@layout/view_file_action_bar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_26sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++            <ImageView android:id="@+id/mouse_icon" android:layout_width="@dimen/_70sdp" android:layout_height="@dimen/_70sdp" android:layout_marginTop="@dimen/_45sdp" app:layout_constraintEnd_toEndOf="@+id/operate_main_layout" app:layout_constraintStart_toStartOf="@+id/operate_main_layout" app:layout_constraintTop_toTopOf="@+id/operate_main_layout" tools:srcCompat="@tools:sample/avatars" tools:ignore="ContentDescription"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_download.xml b/ZalithLauncher/src/main/res/layout-port/fragment_download.xml
+new file mode 100644
+index 0000000..4eb4a21
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_download.xml
+@@ -0,0 +1,47 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" tools:ignore="ContentDescription">
++
++    <androidx.viewpager2.widget.ViewPager2 android:id="@+id/download_viewpager" android:layout_width="0dp" android:layout_height="0dp" android:layout_marginStart="@dimen/_minus4sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@id/classify_layout" app:layout_constraintTop_toTopOf="parent"/>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/classify_layout" android:layout_width="wrap_content" android:layout_height="match_parent" app:layout_constraintStart_toStartOf="parent">
++
++        <View android:id="@+id/classify_shadowView" android:layout_width="@dimen/_4sdp" android:layout_height="0dp" android:background="@drawable/shadow_gradient_left" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        <com.angcyo.tablayout.DslTabLayout android:id="@+id/classify_tab" android:layout_width="wrap_content" android:layout_height="match_parent" android:background="@color/menu_overlay" app:layout_constraintEnd_toStartOf="@+id/classify_shadowView" app:layout_constraintStart_toStartOf="parent" app:tab_draw_indicator="true" app:tab_indicator_enable_flow="true" app:tab_indicator_drawable="@drawable/selector_bar_vertical" app:tab_indicator_x_offset="@dimen/_4sdp" app:tab_orientation="VERTICAL">
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp">
++
++                <ImageView android:id="@+id/mod_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_4sdp" android:background="@android:color/transparent" android:scaleType="fitCenter" android:scaleX="0.95" android:scaleY="0.95" app:srcCompat="@drawable/ic_profile_mods"/>
++
++                <TextView android:layout_width="@dimen/_70sdp" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/mod_image" android:text="@string/download_classify_mod" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp">
++
++                <ImageView android:id="@+id/modpack_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_4sdp" android:background="@android:color/transparent" android:scaleType="fitCenter" android:scaleX="0.82" android:scaleY="0.82" app:srcCompat="@drawable/ic_zip"/>
++
++                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/modpack_image" android:text="@string/download_classify_modpack" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp">
++
++                <ImageView android:id="@+id/resource_pack_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_4sdp" android:background="@android:color/transparent" android:scaleType="fitCenter" android:scaleX="0.82" android:scaleY="0.82" app:srcCompat="@drawable/ic_profile_resource_pack"/>
++
++                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/resource_pack_image" android:text="@string/download_classify_resource_pack" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp">
++
++                <ImageView android:id="@+id/world_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_4sdp" android:background="@android:color/transparent" android:scaleType="fitCenter" android:scaleX="0.78" android:scaleY="0.78" app:srcCompat="@drawable/ic_profile_saves"/>
++
++                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/world_image" android:text="@string/download_classify_world" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp">
++
++                <ImageView android:id="@+id/shader_pack_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_4sdp" android:background="@android:color/transparent" android:scaleType="fitCenter" android:scaleX="0.95" android:scaleY="0.95" app:srcCompat="@drawable/ic_profile_shader_pack"/>
++
++                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/shader_pack_image" android:text="@string/download_classify_shader_pack" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++        </com.angcyo.tablayout.DslTabLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_download_resource.xml b/ZalithLauncher/src/main/res/layout-port/fragment_download_resource.xml
+new file mode 100644
+index 0000000..13b9973
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_download_resource.xml
+@@ -0,0 +1,87 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/download_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.recyclerview.widget.RecyclerView android:id="@+id/recycler_view" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginEnd="@dimen/_minus4sdp" android:clipToPadding="false" android:paddingHorizontal="@dimen/_8sdp" android:scrollbarThumbVertical="@color/background_menu_element" android:scrollbars="vertical" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/loading_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/background_card" android:orientation="vertical" android:paddingHorizontal="@dimen/_16sdp" android:paddingVertical="@dimen/_8sdp" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <ProgressBar android:id="@+id/loading_progress" style="?android:attr/progressBarStyle" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/generic_loading" android:textSize="@dimen/_14ssp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/loading_progress"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++        <TextView android:id="@+id/status_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/background_item" android:padding="@dimen/_12sdp" android:visibility="gone" app:layout_constraintBottom_toBottomOf="@+id/recycler_view" app:layout_constraintEnd_toEndOf="@+id/recycler_view" app:layout_constraintStart_toStartOf="@+id/recycler_view" app:layout_constraintTop_toTopOf="@+id/recycler_view" tools:ignore="HardcodedText"/>
++
++        <ImageButton android:id="@+id/back_to_top" android:layout_width="@dimen/_40sdp" android:layout_height="@dimen/_40sdp" android:layout_marginEnd="@dimen/_18sdp" android:layout_marginBottom="@dimen/_16sdp" android:background="?android:attr/selectableItemBackgroundBorderless" android:rotation="-90" android:scaleType="centerInside" android:src="@drawable/ic_spinner_arrow_right" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" tools:ignore="ContentDescription"/>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <TextView android:id="@+id/search_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginTop="@dimen/_12sdp" android:text="@string/download_ui_search" app:layout_constraintTop_toTopOf="parent"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimEditText android:id="@+id/name_edit" android:layout_width="0dp" android:layout_height="@dimen/_40sdp" android:layout_marginHorizontal="@dimen/_8sdp" android:background="@drawable/background_edit_box" android:inputType="textPersonName" android:paddingHorizontal="@dimen/padding_heavy" android:textSize="@dimen/_13ssp" app:layout_constraintEnd_toStartOf="@id/search_view" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/search_title"/>
++
++            <ImageButton android:id="@+id/search_view" android:layout_width="wrap_content" android:layout_height="0dp" android:layout_marginEnd="@dimen/_8sdp" android:background="?android:attr/selectableItemBackgroundBorderless" android:minWidth="@dimen/_38sdp" android:src="@drawable/ic_mod_search" app:layout_constraintBottom_toBottomOf="@+id/name_edit" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toBottomOf="@+id/search_title" tools:ignore="ContentDescription"/>
++
++            <ScrollView android:layout_width="0dp" android:layout_height="0dp" android:layout_marginVertical="@dimen/_8sdp" app:layout_constraintBottom_toTopOf="@+id/return_button" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/name_edit">
++
++                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
++
++                    <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/install_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_4sdp" android:text="@string/download_ui_install_local"/>
++
++                    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/mc_version_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_4sdp" android:layout_marginHorizontal="@dimen/_8sdp">
++
++                        <TextView android:id="@+id/mc_version_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/download_ui_mc_version" app:layout_constraintTop_toTopOf="parent"/>
++
++                        <com.movtery.zalithlauncher.ui.view.AnimTextView android:id="@+id/selected_mc_version_view" android:layout_width="0dp" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_edit_box" android:hint="@string/version_select_hint" android:paddingHorizontal="@dimen/padding_heavy" android:textSize="@dimen/_13ssp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/mc_version_textview"/>
++
++                    </androidx.constraintlayout.widget.ConstraintLayout>
++
++                    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/platform_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:layout_marginHorizontal="@dimen/_8sdp">
++
++                        <TextView android:id="@+id/platform_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/download_ui_platform" app:layout_constraintTop_toTopOf="parent"/>
++
++                        <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/platform_spinner" android:layout_width="0dp" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_edit_box" android:paddingHorizontal="@dimen/_8sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/platform_textview" app:spinner_arrow_tint="@color/primary_text" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_height="@dimen/_80sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                    </androidx.constraintlayout.widget.ConstraintLayout>
++
++                    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/sort_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:layout_marginHorizontal="@dimen/_8sdp">
++
++                        <TextView android:id="@+id/sort_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/download_ui_sort_by" app:layout_constraintTop_toTopOf="parent"/>
++
++                        <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/sort_spinner" android:layout_width="0dp" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_edit_box" android:paddingHorizontal="@dimen/_8sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/sort_textview" app:spinner_arrow_tint="@color/primary_text" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_height="@dimen/_200sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                    </androidx.constraintlayout.widget.ConstraintLayout>
++
++                    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/category_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:layout_marginHorizontal="@dimen/_8sdp">
++
++                        <TextView android:id="@+id/category_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/download_ui_category" app:layout_constraintTop_toTopOf="parent"/>
++
++                        <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/category_spinner" android:layout_width="0dp" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_edit_box" android:paddingHorizontal="@dimen/_8sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/category_textview" app:spinner_arrow_tint="@color/primary_text" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_height="@dimen/_200sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                    </androidx.constraintlayout.widget.ConstraintLayout>
++
++                    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/modloader_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:layout_marginHorizontal="@dimen/_8sdp">
++
++                        <TextView android:id="@+id/modloader_textview" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/download_ui_modloader" app:layout_constraintTop_toTopOf="parent"/>
++
++                        <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/modloader_spinner" android:layout_width="0dp" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_edit_box" android:paddingHorizontal="@dimen/_8sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/modloader_textview" app:spinner_arrow_tint="@color/primary_text" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_height="@dimen/_200sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                    </androidx.constraintlayout.widget.ConstraintLayout>
++                </LinearLayout>
++            </ScrollView>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/reset" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginVertical="@dimen/_8sdp" android:layout_marginStart="@dimen/_4sdp" android:text="@string/generic_reset" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="@+id/return_button" app:layout_constraintStart_toStartOf="parent"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/return_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginVertical="@dimen/_8sdp" android:layout_marginEnd="@dimen/_4sdp" android:text="@string/generic_return" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/reset"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_files.xml b/ZalithLauncher/src/main/res/layout-port/fragment_files.xml
+new file mode 100644
+index 0000000..6bf5a75
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_files.xml
+@@ -0,0 +1,48 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/files_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <com.movtery.zalithlauncher.ui.subassembly.filelist.FileRecyclerView android:id="@+id/file_recycler_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_layout"/>
++
++            <TextView android:id="@+id/nothing_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/file_nothing" android:background="@drawable/background_item" android:padding="@dimen/_12sdp" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/title_layout" android:layout_width="0dp" android:layout_height="wrap_content" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++
++                <com.movtery.zalithlauncher.ui.view.AnimTextView android:id="@+id/current_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:text="." android:textColor="@color/primary_text" android:background="?android:attr/selectableItemBackground" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toStartOf="@+id/select_all" app:layout_constraintTop_toTopOf="parent" tools:ignore="HardcodedText"/>
++
++                <com.movtery.zalithlauncher.ui.view.AnimCheckBox android:id="@+id/select_all" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/_16sdp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_buttons_layout" android:layout_width="match_parent" android:layout_height="match_parent">
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:id="@+id/external_storage" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/_16sdp" android:background="?android:attr/selectableItemBackground" android:minHeight="@dimen/_40sdp" app:layout_constraintBottom_toTopOf="@+id/operate_view" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++                    <ImageView android:id="@+id/imageView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_20sdp" android:layout_centerVertical="true" android:contentDescription="@string/file_external_storage" android:src="@drawable/ic_folder"/>
++                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_12sdp" android:layout_toEndOf="@+id/imageView" android:textColor="@color/black_or_white" android:text="@string/file_external_storage"/>
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:id="@+id/software_private" android:layout_width="0dp" android:layout_height="wrap_content" android:background="?android:attr/selectableItemBackground" android:minHeight="@dimen/_40sdp" app:layout_constraintBottom_toTopOf="@+id/external_storage" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++                    <ImageView android:id="@+id/imageView1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_20sdp" android:layout_centerVertical="true" android:contentDescription="@string/file_software_private" android:src="@drawable/ic_folder"/>
++                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_12sdp" android:layout_toEndOf="@+id/imageView1" android:textColor="@color/black_or_white" android:text="@string/file_software_private"/>
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.view.AnimCheckBox android:id="@+id/multi_select_files" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_16sdp" android:layout_marginBottom="@dimen/_4sdp" android:paddingStart="@dimen/_8sdp" android:text="@string/file_multi_select_mode" app:layout_constraintBottom_toTopOf="@+id/software_private" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" tools:ignore="RtlSymmetry"/>
++
++                <include android:id="@+id/operate_view" layout="@layout/view_file_action_bar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_26sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_launcher.xml b/ZalithLauncher/src/main/res/layout-port/fragment_launcher.xml
+new file mode 100644
+index 0000000..0a1dea5
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_launcher.xml
+@@ -0,0 +1,357 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:id="@+id/fragment_menu_main"
++    android:layout_width="fill_parent"
++    android:layout_height="fill_parent"
++    android:background="@android:color/transparent"
++    android:gravity="top"
++    android:orientation="vertical"
++    tools:ignore="ContentDescription">
++
++    <androidx.constraintlayout.widget.ConstraintLayout
++        android:id="@+id/launcher_menu"
++        android:layout_width="0dp"
++        android:layout_height="0dp"
++        app:layout_constraintBottom_toTopOf="@+id/play_layout"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toTopOf="parent">
++
++        <ScrollView
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            app:layout_constraintBottom_toBottomOf="parent"
++            app:layout_constraintEnd_toEndOf="parent"
++            app:layout_constraintStart_toStartOf="parent"
++            app:layout_constraintTop_toTopOf="parent">
++
++            <LinearLayout
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:orientation="vertical">
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                    android:id="@+id/about_button"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++                    android:layout_marginTop="@dimen/_12sdp"
++                    android:layout_marginStart="@dimen/_12sdp"
++                    android:layout_marginEnd="@dimen/_8sdp"
++                    android:translationZ="4dp"
++                    android:background="@drawable/background_item"
++                    android:paddingHorizontal="@dimen/_8sdp"
++                    android:paddingVertical="@dimen/_12sdp"
++                    app:ripple_for_relative="true">
++
++                    <ImageView
++                        android:id="@+id/about_icon"
++                        android:layout_width="@dimen/_24sdp"
++                        android:layout_height="@dimen/_24sdp"
++                        android:layout_marginStart="@dimen/_8sdp"
++                        android:layout_alignParentStart="true"
++                        android:layout_centerVertical="true"
++                        android:scaleX="0.93"
++                        android:scaleY="0.93"
++                        android:src="@drawable/ic_about"/>
++
++                    <TextView
++                        android:id="@+id/about_text"
++                        android:layout_width="0dp"
++                        android:layout_height="wrap_content"
++                        android:layout_marginStart="@dimen/_16sdp"
++                        android:layout_marginEnd="@dimen/_8sdp"
++                        android:layout_alignParentEnd="true"
++                        android:layout_centerVertical="true"
++                        android:layout_toEndOf="@id/about_icon"
++                        android:textSize="@dimen/_12sdp"
++                        android:textColor="@color/primary_text"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                    android:id="@+id/custom_control_button"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++                    android:layout_marginTop="@dimen/_12sdp"
++                    android:layout_marginStart="@dimen/_12sdp"
++                    android:layout_marginEnd="@dimen/_8sdp"
++                    android:translationZ="4dp"
++                    android:background="@drawable/background_item"
++                    android:paddingHorizontal="@dimen/_8sdp"
++                    android:paddingVertical="@dimen/_12sdp"
++                    app:ripple_for_relative="true">
++
++                    <ImageView
++                        android:id="@+id/custom_control_icon"
++                        android:layout_width="@dimen/_24sdp"
++                        android:layout_height="@dimen/_24sdp"
++                        android:layout_marginStart="@dimen/_8sdp"
++                        android:layout_alignParentStart="true"
++                        android:layout_centerVertical="true"
++                        android:src="@drawable/ic_menu_custom_controls"/>
++
++                    <TextView
++                        android:layout_width="0dp"
++                        android:layout_height="wrap_content"
++                        android:layout_marginStart="@dimen/_16sdp"
++                        android:layout_marginEnd="@dimen/_8sdp"
++                        android:layout_alignParentEnd="true"
++                        android:layout_centerVertical="true"
++                        android:layout_toEndOf="@id/custom_control_icon"
++                        android:text="@string/custom_control_title"
++                        android:textSize="@dimen/_12sdp"
++                        android:textColor="@color/primary_text"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                    android:id="@+id/open_main_dir_button"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++                    android:layout_marginTop="@dimen/_12sdp"
++                    android:layout_marginStart="@dimen/_12sdp"
++                    android:layout_marginEnd="@dimen/_8sdp"
++                    android:translationZ="4dp"
++                    android:background="@drawable/background_item"
++                    android:paddingHorizontal="@dimen/_8sdp"
++                    android:paddingVertical="@dimen/_12sdp"
++                    app:ripple_for_relative="true">
++
++                    <ImageView
++                        android:id="@+id/open_main_dir_icon"
++                        android:layout_width="@dimen/_24sdp"
++                        android:layout_height="@dimen/_24sdp"
++                        android:layout_marginStart="@dimen/_8sdp"
++                        android:layout_alignParentStart="true"
++                        android:layout_centerVertical="true"
++                        android:src="@drawable/ic_folder"/>
++
++                    <TextView
++                        android:layout_width="0dp"
++                        android:layout_height="wrap_content"
++                        android:layout_marginStart="@dimen/_16sdp"
++                        android:layout_marginEnd="@dimen/_8sdp"
++                        android:layout_alignParentEnd="true"
++                        android:layout_centerVertical="true"
++                        android:layout_toEndOf="@id/open_main_dir_icon"
++                        android:text="@string/main_open_main_dir"
++                        android:textSize="@dimen/_12sdp"
++                        android:textColor="@color/primary_text"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                    android:id="@+id/install_jar_button"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++                    android:layout_marginTop="@dimen/_12sdp"
++                    android:layout_marginStart="@dimen/_12sdp"
++                    android:layout_marginEnd="@dimen/_8sdp"
++                    android:translationZ="4dp"
++                    android:background="@drawable/background_item"
++                    android:paddingHorizontal="@dimen/_8sdp"
++                    android:paddingVertical="@dimen/_12sdp"
++                    app:ripple_for_relative="true">
++
++                    <ImageView
++                        android:id="@+id/install_jar_icon"
++                        android:layout_width="@dimen/_24sdp"
++                        android:layout_height="@dimen/_24sdp"
++                        android:layout_marginStart="@dimen/_8sdp"
++                        android:layout_alignParentStart="true"
++                        android:layout_centerVertical="true"
++                        android:src="@drawable/ic_java"/>
++
++                    <TextView
++                        android:layout_width="0dp"
++                        android:layout_height="wrap_content"
++                        android:layout_marginStart="@dimen/_16sdp"
++                        android:layout_marginEnd="@dimen/_8sdp"
++                        android:layout_alignParentEnd="true"
++                        android:layout_centerVertical="true"
++                        android:layout_toEndOf="@id/install_jar_icon"
++                        android:text="@string/main_install_jar_file"
++                        android:textSize="@dimen/_12sdp"
++                        android:textColor="@color/primary_text"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                    android:id="@+id/share_logs_button"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++                    android:layout_marginTop="@dimen/_12sdp"
++                    android:layout_marginStart="@dimen/_12sdp"
++                    android:layout_marginEnd="@dimen/_8sdp"
++                    android:layout_marginBottom="@dimen/_12sdp"
++                    android:translationZ="4dp"
++                    android:background="@drawable/background_item"
++                    android:paddingHorizontal="@dimen/_8sdp"
++                    android:paddingVertical="@dimen/_12sdp"
++                    app:ripple_for_relative="true">
++
++                    <ImageView
++                        android:id="@+id/share_logs_icon"
++                        android:layout_width="@dimen/_24sdp"
++                        android:layout_height="@dimen/_24sdp"
++                        android:layout_marginStart="@dimen/_8sdp"
++                        android:layout_alignParentStart="true"
++                        android:layout_centerVertical="true"
++                        android:src="@drawable/ic_share"/>
++
++                    <TextView
++                        android:layout_width="0dp"
++                        android:layout_height="wrap_content"
++                        android:layout_marginStart="@dimen/_16sdp"
++                        android:layout_marginEnd="@dimen/_8sdp"
++                        android:layout_alignParentEnd="true"
++                        android:layout_centerVertical="true"
++                        android:layout_toEndOf="@id/share_logs_icon"
++                        android:text="@string/main_share_logs"
++                        android:textSize="@dimen/_12sdp"
++                        android:textColor="@color/primary_text"/>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++            </LinearLayout>
++        </ScrollView>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout
++        android:id="@+id/play_layout"
++        android:layout_width="0dp"
++        android:layout_height="0dp"
++        app:layout_constraintHeight_percent="0.42"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent">
++
++        <View
++            android:id="@+id/shadowView"
++            android:layout_width="0dp"
++            android:layout_height="1dp"
++            android:background="@color/menu_overlay"
++            app:layout_constraintEnd_toEndOf="parent"
++            app:layout_constraintStart_toStartOf="parent"
++            app:layout_constraintTop_toTopOf="parent" />
++
++        <androidx.constraintlayout.widget.ConstraintLayout
++            android:id="@+id/play_main_layout"
++            android:layout_width="0dp"
++            android:layout_height="0dp"
++            android:background="@color/menu_overlay"
++            app:layout_constraintTop_toBottomOf="@id/shadowView"
++            app:layout_constraintBottom_toBottomOf="parent"
++            app:layout_constraintEnd_toEndOf="parent"
++            app:layout_constraintStart_toStartOf="parent">
++
++            <androidx.constraintlayout.widget.ConstraintLayout
++                android:id="@+id/play_buttons_layout"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent">
++
++                <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                    android:id="@+id/version"
++                    android:layout_width="0dp"
++                    android:layout_height="@dimen/_38sdp"
++                    android:layout_marginBottom="@dimen/_8sdp"
++                    app:layout_constraintBottom_toTopOf="@+id/play_button"
++                    app:layout_constraintEnd_toStartOf="@+id/manager_profile_button"
++                    app:layout_constraintHorizontal_bias="0.0"
++                    app:layout_constraintStart_toEndOf="parent"
++                    app:layout_constraintStart_toStartOf="parent">
++
++                    <ImageView
++                        android:id="@+id/version_icon"
++                        android:layout_width="@dimen/_36sdp"
++                        android:layout_height="@dimen/_36sdp"
++                        android:layout_marginStart="@dimen/_12sdp"
++                        android:layout_centerVertical="true"
++                        android:scaleType="centerInside"
++                        android:src="@drawable/ic_minecraft"/>
++
++                    <LinearLayout
++                        android:layout_width="match_parent"
++                        android:layout_height="wrap_content"
++                        android:layout_marginHorizontal="@dimen/_8sdp"
++                        android:layout_centerVertical="true"
++                        android:layout_alignParentEnd="true"
++                        android:layout_toEndOf="@id/version_icon"
++                        android:orientation="vertical">
++
++                        <TextView
++                            android:id="@+id/version_name"
++                            android:layout_width="match_parent"
++                            android:layout_height="wrap_content"
++                            android:gravity="start"
++                            android:singleLine="true"
++                            android:focusable="true"
++                            android:focusableInTouchMode="true"
++                            android:ellipsize="marquee"
++                            android:scrollHorizontally="true"
++                            android:marqueeRepeatLimit="marquee_forever"
++                            android:text="@string/version_no_versions" />
++
++                        <TextView
++                            android:id="@+id/version_info"
++                            android:layout_width="match_parent"
++                            android:layout_height="wrap_content"
++                            android:gravity="start"
++                            android:singleLine="true"
++                            android:focusable="true"
++                            android:focusableInTouchMode="true"
++                            android:ellipsize="marquee"
++                            android:scrollHorizontally="true"
++                            android:marqueeRepeatLimit="marquee_forever"
++                            android:visibility="gone" />
++
++                    </LinearLayout>
++
++                </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                <ImageButton
++                    android:id="@+id/manager_profile_button"
++                    android:layout_width="@dimen/_38sdp"
++                    android:layout_height="0dp"
++                    android:layout_marginEnd="@dimen/_8sdp"
++                    android:layout_marginBottom="@dimen/_8sdp"
++                    android:background="?android:attr/selectableItemBackgroundBorderless"
++                    android:scaleType="centerInside"
++                    android:src="@drawable/ic_setting"
++                    app:layout_constraintBottom_toTopOf="@+id/play_button"
++                    app:layout_constraintEnd_toEndOf="parent"
++                    app:layout_constraintTop_toTopOf="@id/version" />
++
++                <com.movtery.zalithlauncher.ui.view.AnimButton
++                    android:id="@+id/play_button"
++                    android:layout_width="0dp"
++                    android:layout_height="wrap_content"
++                    android:layout_marginHorizontal="@dimen/_8sdp"
++                    android:layout_marginBottom="@dimen/_8sdp"
++                    android:text="@string/main_launch"
++                    android:textAllCaps="true"
++                    app:layout_constraintBottom_toBottomOf="parent"
++                    app:layout_constraintEnd_toEndOf="parent"
++                    app:layout_constraintStart_toStartOf="parent"
++                    tools:ignore="MissingConstraints" />
++
++                <include
++                    android:id="@+id/view_account"
++                    layout="@layout/view_account"
++                    android:layout_width="wrap_content"
++                    android:layout_height="wrap_content"
++                    app:layout_constraintBottom_toTopOf="@id/version"
++                    app:layout_constraintEnd_toEndOf="parent"
++                    app:layout_constraintStart_toStartOf="parent"
++                    app:layout_constraintTop_toTopOf="parent" />
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++</androidx.constraintlayout.widget.ConstraintLayout>
++
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_mod_download.xml b/ZalithLauncher/src/main/res/layout-port/fragment_mod_download.xml
+new file mode 100644
+index 0000000..729f5db
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_mod_download.xml
+@@ -0,0 +1,65 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:clickable="true" android:focusable="true" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/mods_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginVertical="@dimen/_12sdp" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerView" android:layout_width="match_parent" android:layout_height="0dp" android:paddingHorizontal="@dimen/_8sdp" android:paddingVertical="@dimen/_4sdp" android:scrollbarThumbVertical="@color/background_menu_element" android:scrollbars="vertical" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/loading_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++                <ProgressBar android:id="@+id/loading_progress" style="?android:attr/progressBarStyle" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/generic_loading" android:textSize="@dimen/_14ssp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/loading_progress"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++
++            <TextView android:id="@+id/failed_to_load" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_12sdp" android:background="@drawable/background_item" android:gravity="center_vertical" android:padding="@dimen/_12sdp" android:textColor="#FF1E1E" android:textStyle="bold" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <ImageButton android:id="@+id/back_to_top" android:layout_width="@dimen/_40sdp" android:layout_height="@dimen/_40sdp" android:layout_marginEnd="@dimen/_18sdp" android:layout_marginBottom="@dimen/_16sdp" android:background="?android:attr/selectableItemBackgroundBorderless" android:rotation="-90" android:scaleType="centerInside" android:src="@drawable/ic_spinner_arrow_right" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" tools:ignore="ContentDescription"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="0dp" app:layout_constraintBottom_toTopOf="@+id/release_version" app:layout_constraintTop_toTopOf="parent">
++
++                <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content">
++
++                    <com.google.android.material.imageview.ShapeableImageView android:id="@+id/icon" android:layout_width="@dimen/_70sdp" android:layout_height="@dimen/_70sdp" android:layout_marginTop="@dimen/_45sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:shapeAppearanceOverlay="@style/RoundedCornersImageView" app:strokeColor="@android:color/transparent" tools:ignore="ContentDescription" tools:srcCompat="@tools:sample/avatars"/>
++
++                    <TextView android:id="@+id/select_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginTop="@dimen/_4sdp" android:visibility="gone" android:paddingHorizontal="@dimen/_8sdp" android:singleLine="true" android:text="Select Title" android:textSize="@dimen/_14ssp" android:textStyle="bold" android:gravity="center_horizontal" app:layout_constraintTop_toBottomOf="@+id/icon" tools:ignore="HardcodedText"/>
++
++                    <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginTop="@dimen/_4sdp" android:textSize="@dimen/_12ssp" android:textStyle="bold" android:textIsSelectable="true" android:gravity="center_horizontal" app:layout_constraintTop_toBottomOf="@+id/select_title" tools:text="Title"/>
++
++                    <TextView android:id="@+id/description" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_4sdp" android:paddingHorizontal="@dimen/_8sdp" android:visibility="gone" android:textIsSelectable="true" android:gravity="center_horizontal" app:layout_constraintTop_toBottomOf="@+id/title"/>
++
++                    <LinearLayout android:id="@+id/more_layout" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/_4sdp" android:layout_marginHorizontal="@dimen/_12sdp" android:orientation="vertical" app:layout_constraintTop_toBottomOf="@id/description" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++                </androidx.constraintlayout.widget.ConstraintLayout>
++
++            </androidx.core.widget.NestedScrollView>
++
++            <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/_24sdp" android:layout_marginTop="@dimen/_16sdp" android:orientation="horizontal" android:gravity="end" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++                <com.movtery.zalithlauncher.ui.view.AnimTextView android:id="@+id/mcmod_link" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginEnd="@dimen/_12sdp" android:background="?android:attr/selectableItemBackground" android:gravity="center_vertical" android:text="MC 百科" android:textStyle="bold" android:visibility="gone" tools:ignore="HardcodedText"/>
++
++                <ImageView android:id="@+id/launch_link" android:layout_width="@dimen/_24sdp" android:layout_height="@dimen/_24sdp" android:layout_marginEnd="@dimen/_12sdp" android:background="?android:attr/selectableItemBackgroundBorderless" android:contentDescription="@string/about_access_link" android:scaleType="centerInside" android:src="@drawable/ic_launch_link" android:visibility="gone"/>
++
++            </LinearLayout>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/return_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:text="@string/generic_return" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.0" app:layout_constraintStart_toStartOf="parent"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/refresh_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:text="@string/generic_refresh" app:layout_constraintBottom_toTopOf="@+id/return_button" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.5" app:layout_constraintHorizontal_chainStyle="spread_inside" app:layout_constraintStart_toStartOf="parent"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimCheckBox android:id="@+id/release_version" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:checked="true" android:singleLine="true" android:text="@string/profile_mods_download_mod_release_version" app:layout_constraintBottom_toTopOf="@+id/refresh_button" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_mods.xml b/ZalithLauncher/src/main/res/layout-port/fragment_mods.xml
+new file mode 100644
+index 0000000..2ce4737
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_mods.xml
+@@ -0,0 +1,44 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/mods_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <com.movtery.zalithlauncher.ui.subassembly.filelist.FileRecyclerView android:id="@+id/file_recycler_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_layout"/>
++
++            <androidx.appcompat.widget.LinearLayoutCompat android:id="@+id/nothing_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/background_item" android:padding="@dimen/_8sdp" android:layout_marginHorizontal="@dimen/_8sdp" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++                <TextView android:id="@+id/nothing_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/file_nothing" android:layout_marginStart="@dimen/_8sdp"/>
++
++                <com.movtery.zalithlauncher.ui.view.AnimTextView android:id="@+id/go_download_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/button_background" android:text="@string/profile_mods_download_mod" android:layout_marginHorizontal="@dimen/_8sdp" app:ripple_for_text="true"/>
++
++            </androidx.appcompat.widget.LinearLayoutCompat>
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/title_layout" android:layout_width="0dp" android:layout_height="wrap_content" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++
++                <TextView android:id="@+id/title_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:text="@string/version_manager_shortcuts_mods" android:textColor="@color/primary_text" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++                <com.movtery.zalithlauncher.ui.view.AnimCheckBox android:id="@+id/select_all" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/_16sdp" android:visibility="gone" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_buttons_layout" android:layout_width="match_parent" android:layout_height="match_parent">
++
++                <com.movtery.zalithlauncher.ui.view.AnimCheckBox android:id="@+id/multi_select_files" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_16sdp" android:layout_marginBottom="@dimen/_8sdp" android:paddingStart="@dimen/_8sdp" android:text="@string/file_multi_select_mode" app:layout_constraintBottom_toTopOf="@id/operate_view" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" tools:ignore="RtlSymmetry"/>
++
++                <include android:id="@+id/operate_view" layout="@layout/view_file_action_bar" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_26sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_settings.xml b/ZalithLauncher/src/main/res/layout-port/fragment_settings.xml
+new file mode 100644
+index 0000000..f6b66e2
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_settings.xml
+@@ -0,0 +1,50 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" tools:context="com.movtery.zalithlauncher.ui.fragment.SettingsFragment">
++
++    <androidx.viewpager2.widget.ViewPager2 android:id="@+id/settings_viewpager" android:layout_width="0dp" android:layout_height="0dp" android:layout_marginStart="@dimen/_minus4sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/settings_layout" app:layout_constraintTop_toTopOf="parent"/>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/settings_layout" android:layout_width="wrap_content" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++        <View android:id="@+id/shadowView" android:layout_width="@dimen/_4sdp" android:layout_height="0dp" android:background="@drawable/shadow_gradient_left" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++        <com.angcyo.tablayout.DslTabLayout android:id="@+id/settings_tab" android:layout_width="wrap_content" android:layout_height="match_parent" android:background="@color/menu_overlay" app:layout_constraintEnd_toStartOf="@+id/shadowView" app:layout_constraintStart_toStartOf="parent" app:tab_draw_indicator="true" app:tab_indicator_enable_flow="true" app:tab_indicator_drawable="@drawable/selector_bar_vertical" app:tab_indicator_x_offset="@dimen/_6sdp" app:tab_orientation="VERTICAL">
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++                <ImageView android:id="@+id/video_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_6sdp" android:background="@android:color/transparent" android:contentDescription="@string/setting_category_video" android:scaleType="fitCenter" android:scaleX="0.92" android:scaleY="0.92" app:srcCompat="@drawable/ic_setting_video"/>
++
++                <TextView android:layout_width="@dimen/_70sdp" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/video_image" android:text="@string/setting_category_video" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp" app:layout_constraintStart_toStartOf="@+id/video_settings" app:layout_constraintTop_toBottomOf="@+id/video_settings">
++
++                <ImageView android:id="@+id/controls_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_6sdp" android:background="@android:color/transparent" android:contentDescription="@string/setting_category_control" android:scaleType="fitCenter" android:scaleX="0.92" android:scaleY="0.92" app:srcCompat="@drawable/ic_menu_custom_controls"/>
++
++                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/controls_image" android:text="@string/setting_category_control" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp" app:layout_constraintStart_toStartOf="@+id/controls_settings" app:layout_constraintTop_toBottomOf="@+id/controls_settings">
++
++                <ImageView android:id="@+id/game_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_6sdp" android:background="@android:color/transparent" android:contentDescription="@string/setting_category_launcher" android:scaleType="fitCenter" android:scaleX="0.8" android:scaleY="0.8" app:srcCompat="@drawable/ic_setting_game"/>
++
++                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/game_image" android:text="@string/setting_category_game" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp" app:layout_constraintStart_toStartOf="@+id/game_settings" app:layout_constraintTop_toBottomOf="@+id/game_settings">
++
++                <ImageView android:id="@+id/launcher_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_6sdp" android:background="@android:color/transparent" android:contentDescription="@string/setting_category_launcher" android:scaleType="fitCenter" android:scaleX="0.92" android:scaleY="0.92" app:srcCompat="@drawable/ic_setting_launcher"/>
++
++                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/launcher_image" android:text="@string/setting_category_launcher" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="@dimen/_8sdp" app:layout_constraintStart_toStartOf="@+id/launcher_settings" app:layout_constraintTop_toBottomOf="@+id/launcher_settings">
++
++                <ImageView android:id="@+id/experimental_image" android:layout_width="@dimen/_28sdp" android:layout_height="@dimen/_28sdp" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_6sdp" android:background="@android:color/transparent" android:contentDescription="@string/setting_category_experimental" android:scaleType="fitCenter" android:scaleX="0.92" android:scaleY="0.92" app:srcCompat="@drawable/ic_setting_experimental"/>
++
++                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:layout_centerVertical="true" android:layout_marginStart="@dimen/_8sdp" android:layout_toEndOf="@+id/experimental_image" android:text="@string/setting_category_experimental" android:textColor="@color/black_or_white" android:visibility="gone"/>
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++        </com.angcyo.tablayout.DslTabLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_version.xml b/ZalithLauncher/src/main/res/layout-port/fragment_version.xml
+new file mode 100644
+index 0000000..265b9ec
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_version.xml
+@@ -0,0 +1,27 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/version_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_margin="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++            <com.google.android.material.tabs.TabLayout android:id="@+id/version_tab" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:background="@drawable/background_item" android:padding="@dimen/_4sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:tabGravity="fill" app:tabIndicatorColor="@color/menu_progress" app:tabIndicatorHeight="@dimen/_3sdp" app:tabMode="fixed"/>
++
++            <com.movtery.zalithlauncher.ui.subassembly.versionlist.VersionListView android:id="@+id/version" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:paddingTop="@dimen/_4sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/version_tab"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <com.movtery.zalithlauncher.ui.view.AnimEditText android:id="@+id/search_version" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_12sdp" android:layout_marginHorizontal="@dimen/_8sdp" android:background="@drawable/background_edit_box" android:hint="@string/generic_search" android:paddingHorizontal="@dimen/_8sdp" app:layout_constraintTop_toTopOf="parent"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/return_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:text="@string/generic_return" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.0" app:layout_constraintStart_toStartOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_version_config.xml b/ZalithLauncher/src/main/res/layout-port/fragment_version_config.xml
+new file mode 100644
+index 0000000..d65b311
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_version_config.xml
+@@ -0,0 +1,92 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical" tools:ignore="ContentDescription">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/editor_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <ScrollView android:id="@+id/scrollView3" android:layout_width="match_parent" android:layout_height="0dp" android:fadeScrollbars="true" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" tools:ignore="MissingConstraints">
++
++            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:orientation="vertical">
++
++                <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_12sdp" android:padding="@dimen/_12sdp" android:background="@drawable/background_card">
++
++                    <TextView android:id="@+id/version_settings_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/setting_category_version" android:textColor="@color/settings_category" app:layout_constraintTop_toTopOf="parent"/>
++
++                    <TextView android:id="@+id/isolation_type_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/setting_version_isolation_title" app:layout_constraintTop_toBottomOf="@id/version_settings_title"/>
++
++                    <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/isolation_type" android:layout_width="match_parent" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_item" android:padding="@dimen/padding_heavy" app:layout_constraintTop_toBottomOf="@id/isolation_type_title" app:spinner_arrow_tint="@color/primary_text" app:spinner_item_height="@dimen/_40sdp" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_max_height="@dimen/_240sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                    <TextView android:id="@+id/control_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/pedit_control" app:layout_constraintStart_toStartOf="@+id/control_name" app:layout_constraintTop_toBottomOf="@+id/isolation_type"/>
++
++                    <com.movtery.zalithlauncher.ui.view.AnimTextView android:id="@+id/control_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/padding_medium" android:background="@drawable/background_item" android:hint="@string/pedit_default" android:padding="@dimen/padding_heavy" android:textSize="@dimen/_13ssp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toStartOf="@id/reset_control" app:layout_constraintTop_toBottomOf="@+id/control_title"/>
++
++                    <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/reset_control" android:layout_width="wrap_content" android:layout_height="0dp" android:text="@string/generic_reset" app:layout_constraintBottom_toBottomOf="@id/control_name" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="@id/control_name"/>
++
++                    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/custom_path_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" app:layout_constraintTop_toBottomOf="@id/control_name">
++
++                        <TextView android:id="@+id/custom_path_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/pedit_custom_path" app:layout_constraintStart_toStartOf="@+id/custom_path" app:layout_constraintTop_toTopOf="parent"/>
++
++                        <com.movtery.zalithlauncher.ui.view.AnimTextView android:id="@+id/custom_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/padding_medium" android:background="@drawable/background_item" android:hint="./.minecraft" android:padding="@dimen/padding_heavy" android:textSize="@dimen/_13ssp" app:layout_constraintEnd_toStartOf="@id/reset_custom_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/custom_path_title" tools:ignore="HardcodedText"/>
++
++                        <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/reset_custom_path" android:layout_width="wrap_content" android:layout_height="0dp" android:text="@string/generic_reset" app:layout_constraintBottom_toBottomOf="@id/custom_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="@id/custom_path"/>
++
++                    </androidx.constraintlayout.widget.ConstraintLayout>
++
++                    <TextView android:id="@+id/renderer_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/setting_renderer_title" app:layout_constraintStart_toStartOf="@+id/renderer_spinner" app:layout_constraintTop_toBottomOf="@+id/custom_path_layout"/>
++
++                    <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/renderer_spinner" android:layout_width="match_parent" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_item" android:padding="@dimen/padding_heavy" app:layout_constraintTop_toBottomOf="@+id/renderer_title" app:spinner_arrow_tint="@color/primary_text" app:spinner_item_height="@dimen/_40sdp" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_max_height="@dimen/_240sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                    <TextView android:id="@+id/driver_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/setting_driver_title" app:layout_constraintStart_toStartOf="@+id/driver_spinner" app:layout_constraintTop_toBottomOf="@+id/renderer_spinner"/>
++
++                    <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/driver_spinner" android:layout_width="match_parent" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_item" android:padding="@dimen/padding_heavy" app:layout_constraintTop_toBottomOf="@+id/driver_title" app:spinner_arrow_tint="@color/primary_text" app:spinner_item_height="@dimen/_40sdp" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_max_height="@dimen/_240sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                </androidx.constraintlayout.widget.ConstraintLayout>
++
++                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" android:padding="@dimen/_12sdp" android:orientation="vertical">
++
++                    <TextView android:id="@+id/game_settings_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/setting_category_game" android:textColor="@color/settings_category"/>
++
++                    <TextView android:id="@+id/custom_info_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/setting_version_custom_info_title"/>
++
++                    <TextView android:id="@+id/custom_info_desc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="@dimen/_10ssp" android:text="@string/setting_version_custom_info_desc"/>
++
++                    <com.movtery.zalithlauncher.ui.view.AnimEditText android:id="@+id/custom_info_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/background_item" android:ems="10" android:hint="@string/pedit_default" android:inputType="text" android:padding="@dimen/padding_heavy" android:textSize="@dimen/_13ssp"/>
++
++                    <TextView android:id="@+id/jvm_args_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/setting_java_args_title"/>
++
++                    <TextView android:id="@+id/jvm_args_desc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="@dimen/_10ssp" android:text="@string/setting_java_args_desc"/>
++
++                    <com.movtery.zalithlauncher.ui.view.AnimEditText android:id="@+id/jvm_args_edit" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/background_item" android:ems="10" android:hint="@string/pedit_default" android:inputType="text" android:padding="@dimen/padding_heavy" android:textSize="@dimen/_13ssp"/>
++
++                    <TextView android:id="@+id/runtime_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_8sdp" android:text="@string/multirt_config_title"/>
++
++                    <com.skydoves.powerspinner.PowerSpinnerView android:id="@+id/runtime_spinner" android:layout_width="match_parent" android:layout_height="@dimen/_40sdp" android:background="@drawable/background_item" android:padding="@dimen/padding_heavy" app:spinner_arrow_tint="@color/primary_text" app:spinner_item_height="@dimen/_40sdp" app:spinner_popup_background="@drawable/background_edit_box" app:spinner_popup_max_height="@dimen/_240sdp" tools:paddingVertical="@dimen/_12sdp"/>
++
++                </LinearLayout>
++            </LinearLayout>
++        </ScrollView>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <com.movtery.zalithlauncher.ui.layout.AnimConstraintLayout android:id="@+id/icon_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/_52sdp" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
++
++                <ImageView android:id="@+id/icon" android:layout_width="@dimen/_52sdp" android:layout_height="@dimen/_52sdp" android:background="?android:attr/selectableItemBackgroundBorderless" android:paddingHorizontal="@dimen/_2sdp" android:paddingVertical="@dimen/_2sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" tools:src="@tools:sample/avatars"/>
++
++                <ImageView android:layout_width="@dimen/_14sdp" android:layout_height="@dimen/_14sdp" android:background="@drawable/background_icon_edit" android:src="@drawable/ic_edit" app:layout_constraintBottom_toBottomOf="@+id/icon" app:layout_constraintEnd_toEndOf="@+id/icon"/>
++
++            </com.movtery.zalithlauncher.ui.layout.AnimConstraintLayout>
++
++            <ImageView android:id="@+id/icon_reset" android:layout_width="@dimen/_24sdp" android:layout_height="@dimen/_24sdp" android:layout_marginTop="@dimen/_18sdp" android:src="@drawable/ic_reset" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/icon_layout"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/save_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:text="@string/generic_save" app:layout_constraintBottom_toTopOf="@+id/cancel_button" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/cancel_button" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:text="@android:string/cancel" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_version_manager.xml b/ZalithLauncher/src/main/res/layout-port/fragment_version_manager.xml
+new file mode 100644
+index 0000000..939f790
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_version_manager.xml
+@@ -0,0 +1,69 @@
++<?xml version="1.0" encoding="utf-8"?><LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:baselineAligned="false" android:orientation="vertical" tools:ignore="ContentDescription">
++
++    <ScrollView android:id="@+id/shortcuts_layout" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginStart="@dimen/_12sdp" android:layout_marginVertical="@dimen/_12sdp" android:layout_marginEnd="@dimen/_6sdp" android:layout_weight="1" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" android:fillViewport="true" tools:ignore="MissingConstraints">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="@dimen/_12sdp">
++
++            <TextView android:id="@+id/title_textview" style="@style/TextAppearance.AppCompat.Title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="@string/version_manager_shortcuts" android:textColor="@color/primary_text" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.5" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <ImageView android:id="@+id/mods_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" app:layout_constraintBottom_toBottomOf="@+id/shortcuts_mods" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/shortcuts_mods" app:srcCompat="@drawable/ic_profile_mods"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/shortcuts_mods" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_14sdp" android:text="@string/version_manager_shortcuts_mods" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/mods_icon" app:layout_constraintTop_toBottomOf="@+id/title_textview"/>
++
++            <ImageView android:id="@+id/game_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" app:layout_constraintBottom_toBottomOf="@+id/game_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/game_path" app:srcCompat="@drawable/ic_profile_folder"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/game_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_version_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/game_icon" app:layout_constraintTop_toBottomOf="@+id/shortcuts_mods"/>
++
++            <ImageView android:id="@+id/resource_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" app:layout_constraintBottom_toBottomOf="@+id/resource_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/resource_path" app:srcCompat="@drawable/ic_profile_resource_pack"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/resource_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_resource_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/resource_icon" app:layout_constraintTop_toBottomOf="@+id/game_path"/>
++
++            <ImageView android:id="@+id/world_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" app:layout_constraintBottom_toBottomOf="@+id/world_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/world_path" app:srcCompat="@drawable/ic_profile_saves"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/world_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_world_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/world_icon" app:layout_constraintTop_toBottomOf="@+id/resource_path"/>
++
++            <ImageView android:id="@+id/shader_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="fitCenter" android:scaleX="0.95" android:scaleY="0.95" app:layout_constraintBottom_toBottomOf="@+id/shader_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/shader_path" app:srcCompat="@drawable/ic_profile_shader_pack"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/shader_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_shader_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/shader_icon" app:layout_constraintTop_toBottomOf="@+id/world_path"/>
++
++            <ImageView android:id="@+id/screenshot_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="fitCenter" android:scaleX="0.95" android:scaleY="0.95" app:layout_constraintBottom_toBottomOf="@+id/screenshot_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/screenshot_path" app:srcCompat="@drawable/ic_screenshot"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/screenshot_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_screenshot_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/screenshot_icon" app:layout_constraintTop_toBottomOf="@+id/shader_path"/>
++
++            <ImageView android:id="@+id/logs_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" app:layout_constraintBottom_toBottomOf="@+id/logs_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/logs_path" app:srcCompat="@drawable/ic_profile_logs"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/logs_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_logs_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/logs_icon" app:layout_constraintTop_toBottomOf="@+id/screenshot_path"/>
++
++            <ImageView android:id="@+id/crash_report_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" app:layout_constraintBottom_toBottomOf="@+id/crash_report_path" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/crash_report_path" app:srcCompat="@drawable/ic_profile_crash_report"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/crash_report_path" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_shortcuts_crash_report_path" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/crash_report_icon" app:layout_constraintTop_toBottomOf="@+id/logs_path"/>
++            
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </ScrollView>
++
++    <ScrollView android:id="@+id/edit_layout" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginStart="@dimen/_6sdp" android:layout_marginEnd="@dimen/_12sdp" android:layout_marginVertical="@dimen/_12sdp" android:layout_weight="1" android:background="@drawable/background_card" android:padding="@dimen/_2sdp" android:fillViewport="true" tools:ignore="MissingConstraints">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="@dimen/_12sdp">
++
++            <TextView android:id="@+id/title_manage_textview" style="@style/TextAppearance.AppCompat.Title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="@string/version_manager_title" android:textColor="@color/primary_text" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.5" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <ImageView android:id="@+id/version_settings_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" app:layout_constraintBottom_toBottomOf="@+id/version_settings" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/version_settings" app:srcCompat="@drawable/ic_setting"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/version_settings" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_14sdp" android:text="@string/setting_category_version" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/version_settings_icon" app:layout_constraintTop_toBottomOf="@+id/title_manage_textview"/>
++
++            <ImageView android:id="@+id/rename_version_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" app:layout_constraintBottom_toBottomOf="@+id/version_rename" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/version_rename" app:srcCompat="@drawable/ic_edit"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/version_rename" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_rename" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/rename_version_icon" app:layout_constraintTop_toBottomOf="@+id/version_settings"/>
++
++            <ImageView android:id="@+id/copy_version_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" android:scaleX="0.86" android:scaleY="0.86" app:layout_constraintBottom_toBottomOf="@+id/version_copy" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/version_copy" app:srcCompat="@drawable/ic_copy"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/version_copy" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_copy" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/copy_version_icon" app:layout_constraintTop_toBottomOf="@+id/version_rename"/>
++
++            <ImageView android:id="@+id/delete_version_icon" android:layout_width="@dimen/_32sdp" android:layout_height="@dimen/_32sdp" android:layout_marginStart="@dimen/_16sdp" android:scaleType="centerInside" android:scaleX="0.9" android:scaleY="0.9" app:layout_constraintBottom_toBottomOf="@+id/version_delete" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@+id/version_delete" app:srcCompat="@drawable/ic_menu_delete_forever"/>
++
++            <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/version_delete" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/padding_heavy" android:layout_marginTop="@dimen/_4sdp" android:text="@string/version_manager_delete" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/delete_version_icon" app:layout_constraintTop_toBottomOf="@+id/version_copy"/>
++            
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </ScrollView>
++
++</LinearLayout>
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/res/layout-port/fragment_versions_list.xml b/ZalithLauncher/src/main/res/layout-port/fragment_versions_list.xml
+new file mode 100644
+index 0000000..1130118
+--- /dev/null
++++ b/ZalithLauncher/src/main/res/layout-port/fragment_versions_list.xml
+@@ -0,0 +1,66 @@
++<?xml version="1.0" encoding="utf-8"?><androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" android:orientation="vertical">
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/version_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toTopOf="@+id/operate_layout">
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/version_top_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" app:layout_constraintTop_toTopOf="parent">
++
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:id="@+id/install_new" android:layout_width="wrap_content" android:layout_height="0dp" android:padding="@dimen/_8sdp" android:background="@drawable/background_card" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:ripple_for_relative="true">
++
++                <ImageView android:id="@+id/install_icon" android:layout_width="@dimen/_24sdp" android:layout_height="@dimen/_24sdp" android:layout_centerVertical="true" android:src="@drawable/ic_download" tools:ignore="ContentDescription"/>
++
++                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_toEndOf="@id/install_icon" android:layout_marginHorizontal="@dimen/_8sdp" android:textColor="@color/primary_text" android:text="@string/version_install_new"/>
++
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++            <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_12sdp" android:background="@drawable/background_card" app:layout_constraintStart_toEndOf="@id/install_new" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent">
++
++                <com.angcyo.tablayout.DslTabLayout android:id="@+id/favorites_folder_tab" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/_8sdp" android:padding="@dimen/_4sdp" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toStartOf="@id/favorites_actions" app:tab_deselect_color="@color/black_or_white" app:tab_select_color="@color/black_or_white" app:tab_indicator_enable_flow="true" app:tab_indicator_drawable="@drawable/selector_bar_horizontal" app:tab_indicator_y_offset="@dimen/_4sdp">
++
++                    <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout android:id="@+id/all_category" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="@dimen/_8sdp">
++
++                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:paddingHorizontal="@dimen/_8sdp" android:maxLines="2" android:text="@string/generic_all" android:textColor="@color/black_or_white"/>
++
++                    </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
++                </com.angcyo.tablayout.DslTabLayout>
++
++                <ImageView android:id="@+id/favorites_actions" android:layout_width="@dimen/_24sdp" android:layout_height="@dimen/_24sdp" android:layout_marginEnd="@dimen/_8sdp" android:scaleType="centerCrop" android:scaleX="0.92" android:scaleY="0.92" android:background="?android:attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_more" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" tools:ignore="ContentDescription"/>
++
++            </androidx.constraintlayout.widget.ConstraintLayout>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/versions_list_layout" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginStart="@dimen/_12sdp" android:layout_marginEnd="@dimen/_8sdp" android:layout_marginVertical="@dimen/_12sdp" android:background="@drawable/background_card" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/version_top_bar">
++
++            <TextView android:id="@+id/title_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_8sdp" android:layout_marginTop="@dimen/_8sdp" android:text="@string/version_manager_title" android:textColor="@color/primary_text" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <androidx.recyclerview.widget.RecyclerView android:id="@+id/versions" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_8sdp" android:paddingVertical="@dimen/_4sdp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_view"/>
++
++            <ProgressBar android:id="@+id/refresh_versions" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/title_view"/>
++
++        </androidx.constraintlayout.widget.ConstraintLayout>
++
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_layout" android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintHeight_percent="0.4">
++
++        <View android:id="@+id/shadowView" android:layout_width="0dp" android:layout_height="1dp" android:background="@drawable/shadow_gradient_right" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
++
++        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/operate_main_layout" android:layout_width="0dp" android:layout_height="0dp" android:background="@color/menu_overlay" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/shadowView">
++
++            <TextView android:id="@+id/profiles_path_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/_12sdp" android:layout_marginTop="@dimen/_8sdp" android:text="@string/profiles_path_title" android:textColor="@color/primary_text" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
++
++            <androidx.recyclerview.widget.RecyclerView android:id="@+id/profiles_path" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginHorizontal="@dimen/_12sdp" android:paddingVertical="@dimen/_4sdp" app:layout_constraintBottom_toTopOf="@id/operate_view" app:layout_constraintTop_toBottomOf="@id/profiles_path_title"/>
++
++            <androidx.appcompat.widget.LinearLayoutCompat android:id="@+id/operate_view" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/_8sdp" android:layout_marginBottom="@dimen/_8sdp" android:orientation="vertical" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++
++                <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/create_path_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/profiles_path_create_new"/>
++
++                <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/refresh_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/generic_refresh"/>
++
++                <com.movtery.zalithlauncher.ui.view.AnimButton android:id="@+id/return_button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/generic_return"/>
++
++            </androidx.appcompat.widget.LinearLayoutCompat>
++        </androidx.constraintlayout.widget.ConstraintLayout>
++    </androidx.constraintlayout.widget.ConstraintLayout>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
 diff --git a/ZalithLauncher/src/main/res/layout/activity_error.xml b/ZalithLauncher/src/main/res/layout/activity_error.xml
 index 573b1fe..f6d081d 100644
 --- a/ZalithLauncher/src/main/res/layout/activity_error.xml
