@@ -197,6 +197,28 @@ index 74ff062..6a05380 100644
  
          @JvmStatic
          val alternateSurface = BooleanSettingUnit("alternate_surface", false)
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
+index 062ca71..1a4d85f 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
+@@ -37,8 +37,7 @@ class ErrorActivity : BaseActivity() {
+             return
+         }
+         if (extras.getBoolean(BUNDLE_IS_GAME_CRASH, false)) {
+-            //如果不是应用崩溃，那么这个页面就不允许截图
+-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
++            //Pocket Client: upstream blocks screenshots on this screen (FLAG_SECURE); allowed here so errors can be reported
+             showGameCrash(extras)
+             return
+         }
+@@ -84,7 +83,6 @@ class ErrorActivity : BaseActivity() {
+                 textSize = 14f
+             }
+             this.errorTip.visibility = View.VISIBLE
+-            this.errorNoScreenshot.visibility = View.VISIBLE
+ 
+             this.topView.setBackgroundColor(ContextCompat.getColor(context, R.color.background_menu_top))
+             this.background.setBackgroundColor(ContextCompat.getColor(context, R.color.background_app))
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
 index 9b593fa..d8cd486 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
