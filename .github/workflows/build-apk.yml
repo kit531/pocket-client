@@ -1,0 +1,117 @@
+# Builds the Pocket Client APK:
+#   1. checks out Zalith Launcher at a pinned commit and applies launcher/pocketclient.patch
+#   2. builds the client mod (mod/)
+#   3. downloads Fabric API + performance mods from Modrinth and bundles them as app assets
+#   4. builds the APK
+# Run it from the Actions tab ("Run workflow"), then download the APK from the run's Artifacts.
+name: Build Pocket Client APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  # Upstream commit the patch was made against. Bump it only together with a regenerated patch.
+  ZALITH_REF: ed8a5c873b25f19d08aef5bdfc1084fd9aff836c
+  MC_VERSION: "1.21.1"
+  # Bundled mods as slug:keyword. Lithium is left out on purpose: it rewrites collision/physics code.
+  # The slug is the Modrinth project, the keyword is text that
+  # appears in the jar's file name (used to avoid installing a second copy). Edit freely.
+  BUNDLED_MODS: "fabric-api:fabric-api ferrite-core:ferritecore modernfix:modernfix entityculling:entityculling"
+  ARCH: arm64
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Checkout Zalith Launcher (pinned)
+        uses: actions/checkout@v4
+        with:
+          repository: ZalithLauncher/ZalithLauncher
+          ref: ${{ env.ZALITH_REF }}
+          path: zl
+
+      - name: Apply Pocket Client patch
+        run: git -C zl apply "$GITHUB_WORKSPACE/launcher/pocketclient.patch"
+
+      - name: Set up JDK 21 (mod)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build client mod
+        working-directory: mod
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+
+      - name: Bundle mods into the launcher
+        run: |
+          set -euo pipefail
+          A=zl/ZalithLauncher/src/main/assets/builtin_mods
+          UA="pocketclient-build/1.0 (github.com/${GITHUB_REPOSITORY})"
+          mkdir -p "$A"
+
+          jar=$(ls mod/build/libs/pocketclient-*.jar | grep -v -- '-sources' | head -1)
+          cp "$jar" "$A/pocketclient__$(basename "$jar")"
+
+          for entry in $BUNDLED_MODS; do
+            slug=${entry%%:*}
+            keyword=${entry##*:}
+            url=""; fname=""
+            read -r url fname <<<"$(curl -fsSG -A "$UA" "https://api.modrinth.com/v2/project/$slug/version" \
+              --data-urlencode 'loaders=["fabric"]' \
+              --data-urlencode "game_versions=[\"$MC_VERSION\"]" \
+              | jq -r '([.[] | select(.version_type=="release")]) as $r
+                       | (if ($r|length) > 0 then $r[0] else .[0] end)
+                       | .files | (map(select(.primary))[0] // .[0])
+                       | "\(.url) \(.filename)"' 2>/dev/null)" || true
+            if [ -z "$url" ] || [ "$url" = "null" ]; then
+              echo "::warning::No Fabric build of '$slug' for Minecraft $MC_VERSION on Modrinth, skipping"
+              [ "$slug" = "fabric-api" ] && { echo "Fabric API is required"; exit 1; }
+              continue
+            fi
+            echo "Bundling $slug -> $fname"
+            curl -fsSL -A "$UA" -o "$A/${keyword}__${fname}" "$url"
+          done
+          ls -la "$A"
+
+      - name: Set up JDK 17 (launcher)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build JRE helper jars
+        working-directory: zl
+        run: |
+          chmod +x gradlew
+          mkdir -p out
+          ./gradlew jre_lwjgl3glfw:build --no-daemon
+
+      - name: Build APK
+        working-directory: zl
+        env:
+          CF_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          # Optional: set a CURSEFORGE_API_KEY repo secret to enable CurseForge downloads in the app.
+          if [ -n "${CF_KEY:-}" ]; then export CURSEFORGE_API_KEY="$CF_KEY"; fi
+          ./gradlew ZalithLauncher:assembleDebug -Darch=${ARCH} --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PocketClient-${{ env.ARCH }}-apk
+          path: zl/ZalithLauncher/build/outputs/apk/debug/*
+
+      - name: Upload mod jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketclient-mod-jar
+          path: mod/build/libs/pocketclient-*.jar
