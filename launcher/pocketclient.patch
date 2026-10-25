@@ -348,6 +348,261 @@ index 0000000..4ce19bc
 +        }
 +    }
 +}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt
+new file mode 100644
+index 0000000..0aafc00
+--- /dev/null
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt
+@@ -0,0 +1,249 @@
++package com.movtery.zalithlauncher.feature
++
++import com.movtery.zalithlauncher.feature.log.Logging
++import com.movtery.zalithlauncher.utils.path.UrlManager
++import net.kdt.pojavlaunch.Tools
++import okhttp3.OkHttpClient
++import org.json.JSONArray
++import org.json.JSONObject
++import java.io.File
++import java.io.FileOutputStream
++import java.security.MessageDigest
++import java.util.concurrent.TimeUnit
++import java.util.zip.ZipFile
++
++/**
++ * Pocket Client: fixes the most common reason a modded game does not start, a mod that needs a
++ * different version of another mod (for example Iris asking for Sodium 0.6.x while 0.8.x is installed).
++ *
++ * Fabric Loader prints a "potential solution" block in the log when that happens. This reads that
++ * block, finds a matching file on Modrinth, downloads it and swaps it for the old jar.
++ * Only fixes that are about versions are handled ("Replace mod ... with any 0.6.x version",
++ * "Install ..., version 1.2.3 or later"). Anything else is reported back as not fixable.
++ */
++object ModAutoFix {
++    private const val TAG = "ModAutoFix"
++
++    enum class Kind { REPLACE, INSTALL }
++
++    data class Fix(
++        val kind: Kind,
++        val modId: String,
++        val name: String,
++        /** "0.6" for "0.6.x" */
++        val prefix: String?,
++        /** "1.2.3" for "1.2.3 or later" */
++        val minVersion: String?
++    ) {
++        fun describe(): String {
++            val wanted = when {
++                prefix != null -> "$prefix.x"
++                minVersion != null -> "$minVersion+"
++                else -> "latest"
++            }
++            return (if (kind == Kind.REPLACE) "Replace " else "Install ") + "$name ($wanted)"
++        }
++    }
++
++    class Plan(val modsDir: File, val mcVersion: String, val fixes: List<Fix>, val skipped: List<String>)
++
++    private val REPLACE_LINE = Regex("""^Replace mod '(.+?)' \((.+?)\) \S+ with (.+?)\.?$""")
++    private val INSTALL_LINE = Regex("""^Install (?:mod )?'?(.+?)'?(?: \(([^)]+)\))?, (.+?)\.?$""")
++    private val X_RANGE = Regex("""(\d+(?:\.\d+)*)\.x""")
++    private val VERSION = Regex("""\d+(?:\.\d+)+""")
++
++    /** Reads the game log and returns what can be fixed, or null if this crash is not about mod versions. */
++    @JvmStatic
++    fun analyze(logFile: File): Plan? {
++        try {
++            if (!logFile.isFile) return null
++            val text = logFile.readText()
++
++            val gamePath = Regex("""Game Path: (.+?) \(Isolation""").find(text)?.groupValues?.get(1) ?: return null
++            val mcVersion = Regex("""Minecraft Info: ([^,\s]+)""").find(text)?.groupValues?.get(1) ?: return null
++            val start = text.lastIndexOf("A potential solution has been determined")
++            if (start < 0) return null
++
++            val fixes = ArrayList<Fix>()
++            val skipped = ArrayList<String>()
++            for (raw in text.substring(start).lineSequence().drop(1)) {
++                val line = raw.trim()
++                if (line.startsWith("More details")) break
++                if (line.isEmpty()) continue
++                val item = line.removePrefix("-").trim()
++                val fix = parseLine(item)
++                if (fix != null) fixes.add(fix) else skipped.add(item)
++            }
++            if (fixes.isEmpty()) return null
++            return Plan(File(gamePath, "mods"), mcVersion, fixes, skipped)
++        } catch (e: Exception) {
++            Logging.e(TAG, "Could not analyze the log: " + Tools.printToString(e))
++            return null
++        }
++    }
++
++    internal fun parseLine(item: String): Fix? {
++        REPLACE_LINE.find(item)?.let { m ->
++            val range = parseRange(m.groupValues[3]) ?: return null
++            return Fix(Kind.REPLACE, m.groupValues[2].trim(), m.groupValues[1].trim(), range.first, range.second)
++        }
++        INSTALL_LINE.find(item)?.let { m ->
++            val range = parseRange(m.groupValues[3]) ?: return null
++            val name = m.groupValues[1].trim()
++            val id = m.groupValues[2].trim().ifEmpty { name.lowercase().replace(' ', '-') }
++            return Fix(Kind.INSTALL, id, name, range.first, range.second)
++        }
++        return null
++    }
++
++    /** Returns (prefix, minVersion) or null when the wording is not understood. */
++    private fun parseRange(clause: String): Pair<String?, String?>? {
++        val c = clause.lowercase()
++        X_RANGE.find(c)?.let { return Pair(it.groupValues[1], null) }
++        val v = VERSION.find(c)?.value
++        if (v != null && (c.contains("later") || c.contains("newer") || c.contains("higher") || c.contains(">="))) {
++            return Pair(null, v)
++        }
++        if (v == null && c.contains("any")) return Pair(null, null)
++        return null
++    }
++
++    /** Applies every fix. Blocking: call it from a background thread. Returns one line per fix. */
++    @JvmStatic
++    fun applyFixes(plan: Plan): List<String> {
++        val results = ArrayList<String>()
++        val client = UrlManager.createOkHttpClientBuilder { it.callTimeout(120, TimeUnit.SECONDS) }.build()
++        plan.modsDir.mkdirs()
++
++        for (fix in plan.fixes) {
++            try {
++                val dl = findDownload(client, fix, plan.mcVersion)
++                if (dl == null) {
++                    results.add("✗ ${fix.name}: no matching version on Modrinth")
++                    continue
++                }
++                val fileName = File(dl.filename).name
++                val old = if (fix.kind == Kind.REPLACE) findJar(plan.modsDir, fix.modId) else null
++                if (old != null && old.name == fileName) {
++                    results.add("✓ ${fix.name}: already $fileName")
++                    continue
++                }
++
++                val part = File(plan.modsDir, "$fileName.part")
++                download(client, dl.url, part)
++                val sha1 = sha1Of(part)
++                if (dl.sha1.isNotEmpty() && !dl.sha1.equals(sha1, ignoreCase = true)) {
++                    part.delete()
++                    results.add("✗ ${fix.name}: the download was corrupted, try again")
++                    continue
++                }
++
++                old?.delete()
++                val target = File(plan.modsDir, fileName)
++                if (target.exists()) target.delete()
++                if (!part.renameTo(target)) {
++                    part.delete()
++                    results.add("✗ ${fix.name}: could not save $fileName")
++                    continue
++                }
++                results.add("✓ ${fix.describe()}: $fileName")
++            } catch (e: Exception) {
++                Logging.e(TAG, "Fix failed for ${fix.name}: " + Tools.printToString(e))
++                results.add("✗ ${fix.name}: ${e.message ?: e.javaClass.simpleName}")
++            }
++        }
++        return results
++    }
++
++    private class Download(val url: String, val filename: String, val sha1: String)
++
++    private fun findDownload(client: OkHttpClient, fix: Fix, mcVersion: String): Download? {
++        val url = "https://api.modrinth.com/v2/project/${fix.modId}/version" +
++                "?loaders=%5B%22fabric%22%5D&game_versions=%5B%22$mcVersion%22%5D"
++        val body = client.newCall(UrlManager.createRequestBuilder(url).build()).execute().use { r ->
++            if (!r.isSuccessful) null else r.body?.string()
++        } ?: return null
++
++        val versions = JSONArray(body) // newest first
++        var fallback: Download? = null
++        for (i in 0 until versions.length()) {
++            val v = versions.getJSONObject(i)
++            if (!matches(v.optString("version_number"), mcVersion, fix)) continue
++            val files = v.optJSONArray("files") ?: continue
++            val file = pickFile(files) ?: continue
++            val dl = Download(
++                file.getString("url"),
++                file.getString("filename"),
++                file.optJSONObject("hashes")?.optString("sha1") ?: ""
++            )
++            if (v.optString("version_type") == "release") return dl
++            if (fallback == null) fallback = dl
++        }
++        return fallback
++    }
++
++    private fun pickFile(files: JSONArray): JSONObject? {
++        for (j in 0 until files.length()) {
++            val f = files.getJSONObject(j)
++            if (f.optBoolean("primary")) return f
++        }
++        return if (files.length() > 0) files.getJSONObject(0) else null
++    }
++
++    /** Modrinth version numbers are written differently per mod ("mc1.21.1-0.6.13-fabric", "1.8.8+mc1.21.1"). */
++    internal fun matches(versionNumber: String, mcVersion: String, fix: Fix): Boolean {
++        if (fix.prefix == null && fix.minVersion == null) return true
++        val cleaned = versionNumber.replace(mcVersion, " ").replace(Regex("(?i)mc"), " ")
++        val core = VERSION.find(cleaned)?.value ?: return false
++        if (fix.prefix != null) return core == fix.prefix || core.startsWith(fix.prefix + ".")
++        return compareVersions(core, fix.minVersion!!) >= 0
++    }
++
++    internal fun compareVersions(a: String, b: String): Int {
++        val x = a.split('.').map { it.toIntOrNull() ?: 0 }
++        val y = b.split('.').map { it.toIntOrNull() ?: 0 }
++        for (i in 0 until maxOf(x.size, y.size)) {
++            val c = (x.getOrElse(i) { 0 }).compareTo(y.getOrElse(i) { 0 })
++            if (c != 0) return c
++        }
++        return 0
++    }
++
++    /** The jar in [modsDir] whose fabric.mod.json declares [modId]. */
++    private fun findJar(modsDir: File, modId: String): File? {
++        val jars = modsDir.listFiles { f -> f.isFile && f.name.endsWith(".jar") } ?: return null
++        for (jar in jars) {
++            try {
++                ZipFile(jar).use { zip ->
++                    val entry = zip.getEntry("fabric.mod.json") ?: return@use
++                    val json = zip.getInputStream(entry).bufferedReader().use { it.readText() }.trimStart('﻿')
++                    if (JSONObject(json).optString("id") == modId) return jar
++                }
++            } catch (e: Exception) {
++                // not a readable mod jar, skip it
++            }
++        }
++        return null
++    }
++
++    private fun download(client: OkHttpClient, url: String, out: File) {
++        client.newCall(UrlManager.createRequestBuilder(url).build()).execute().use { r ->
++            if (!r.isSuccessful) throw java.io.IOException("download failed (HTTP ${r.code})")
++            val body = r.body ?: throw java.io.IOException("empty response")
++            body.byteStream().use { input -> FileOutputStream(out).use { input.copyTo(it) } }
++        }
++    }
++
++    private fun sha1Of(file: File): String {
++        val md = MessageDigest.getInstance("SHA-1")
++        file.inputStream().use { input ->
++            val buf = ByteArray(64 * 1024)
++            while (true) {
++                val n = input.read(buf)
++                if (n < 0) break
++                md.update(buf, 0, n)
++            }
++        }
++        return md.digest().joinToString("") { "%02x".format(it) }
++    }
++}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt
 index 607f680..0e0d22f 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt
@@ -455,10 +710,20 @@ index 74ff062..2978c1c 100644
          // Launcher
          @JvmStatic
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
-index 062ca71..1a4d85f 100644
+index 062ca71..7a333d0 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
-@@ -37,8 +37,7 @@ class ErrorActivity : BaseActivity() {
+@@ -9,6 +9,9 @@ import androidx.core.content.ContextCompat
+ import com.movtery.zalithlauncher.InfoCenter
+ import com.movtery.zalithlauncher.R
+ import com.movtery.zalithlauncher.databinding.ActivityErrorBinding
++import com.movtery.zalithlauncher.feature.ModAutoFix
++import com.movtery.zalithlauncher.utils.path.PathManager
++import java.io.File
+ import com.movtery.zalithlauncher.utils.ZHTools
+ import net.kdt.pojavlaunch.Tools
+ 
+@@ -37,8 +40,7 @@ class ErrorActivity : BaseActivity() {
              return
          }
          if (extras.getBoolean(BUNDLE_IS_GAME_CRASH, false)) {
@@ -468,7 +733,7 @@ index 062ca71..1a4d85f 100644
              showGameCrash(extras)
              return
          }
-@@ -84,7 +83,6 @@ class ErrorActivity : BaseActivity() {
+@@ -84,11 +86,40 @@ class ErrorActivity : BaseActivity() {
                  textSize = 14f
              }
              this.errorTip.visibility = View.VISIBLE
@@ -476,6 +741,40 @@ index 062ca71..1a4d85f 100644
  
              this.topView.setBackgroundColor(ContextCompat.getColor(context, R.color.background_menu_top))
              this.background.setBackgroundColor(ContextCompat.getColor(context, R.color.background_app))
+         }
++
++        setupAutoFix()
++    }
++
++    /**
++     * Pocket Client: when the game stopped because of mismatched mod versions, offer to fix them.
++     */
++    private fun setupAutoFix() {
++        val plan = ModAutoFix.analyze(File(PathManager.DIR_GAME_HOME, "latestlog.txt")) ?: return
++
++        val summary = StringBuilder(getString(R.string.pc_auto_fix_found))
++        plan.fixes.forEach { summary.append("\n• ").append(it.describe()) }
++        if (plan.skipped.isNotEmpty()) {
++            summary.append("\n\n").append(getString(R.string.pc_auto_fix_skipped))
++            plan.skipped.forEach { summary.append("\n• ").append(it) }
++        }
++        binding.errorText.append("\n\n" + summary)
++
++        binding.errorAutoFix.visibility = View.VISIBLE
++        binding.errorAutoFix.setOnClickListener {
++            binding.errorAutoFix.isEnabled = false
++            binding.errorText.append("\n\n" + getString(R.string.pc_auto_fix_working))
++            Thread {
++                val results = ModAutoFix.applyFixes(plan)
++                runOnUiThread {
++                    binding.errorText.append("\n" + results.joinToString("\n") + "\n\n" + getString(R.string.pc_auto_fix_done))
++                    binding.errorAutoFix.isEnabled = true
++                }
++            }.start()
++        }
+     }
+ 
+     private fun showEasterEgg() {
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
 index af37e30..6ac58c6 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
@@ -508,3 +807,38 @@ index 9b593fa..d8cd486 100644
          const val URL_MCMOD: String = "https://www.mcmod.cn/"
          const val URL_MINECRAFT: String = "https://www.minecraft.net/"
          const val URL_MINECRAFT_VERSION_REPOS: String = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+diff --git a/ZalithLauncher/src/main/res/layout/activity_error.xml b/ZalithLauncher/src/main/res/layout/activity_error.xml
+index 573b1fe..f6d081d 100644
+--- a/ZalithLauncher/src/main/res/layout/activity_error.xml
++++ b/ZalithLauncher/src/main/res/layout/activity_error.xml
+@@ -132,6 +132,15 @@
+         app:layout_constraintStart_toEndOf="@+id/constraintLayout"
+         app:layout_constraintTop_toBottomOf="@+id/top_view">
+ 
++        <com.movtery.zalithlauncher.ui.view.AnimButton
++            android:id="@+id/error_auto_fix"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginHorizontal="@dimen/_8sdp"
++            android:text="@string/pc_auto_fix"
++            android:visibility="gone"
++            app:layout_constraintBottom_toTopOf="@id/share_log"/>
++
+         <com.movtery.zalithlauncher.ui.view.AnimButton
+             android:id="@+id/share_log"
+             android:layout_width="match_parent"
+diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
+index ce85557..2e2f385 100644
+--- a/ZalithLauncher/src/main/res/values/strings.xml
++++ b/ZalithLauncher/src/main/res/values/strings.xml
+@@ -693,4 +693,10 @@
+     <!-- Sponsorship Related -->
+     <string name="request_sponsorship_title">Support My Development</string>
+     <string name="request_sponsorship_message">Most of the content in this software is developed and maintained by me alone. If you find this software helpful and are in a position to do so, I hope you will consider sponsoring me to give me more motivation to continue developing and improving it. Thank you for your support!</string>
++    <!-- Pocket Client -->
++    <string name="pc_auto_fix">Auto-fix mods</string>
++    <string name="pc_auto_fix_found">Auto-fix available:</string>
++    <string name="pc_auto_fix_working">Fixing mods, please wait…</string>
++    <string name="pc_auto_fix_done">Done. Press Restart to launch the game again.</string>
++    <string name="pc_auto_fix_skipped">Cannot be fixed automatically:</string>
+ </resources>
