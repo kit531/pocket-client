@@ -10,6 +10,238 @@ index 873f312..0f6fc3a 100644
  launcher_version_code=141400
  launcher_version_name=1.4.1.4
 \ No newline at end of file
+diff --git a/ZalithLauncher/src/main/assets/default.json b/ZalithLauncher/src/main/assets/default.json
+index 48b3d2c..ee2a9cc 100644
+--- a/ZalithLauncher/src/main/assets/default.json
++++ b/ZalithLauncher/src/main/assets/default.json
+@@ -1 +1,224 @@
+-{"mControlDataList":[{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0 * ${screen_width} + (px(160.0) / 100 * ${preferred_scale}) - (px(80.0) / 100 * ${preferred_scale}) + (px(160.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(60.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[-1,0,0,0],"name":"Input","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"1.0 * ${screen_width} - (px(80.0) / 100 * ${preferred_scale}) + (px(80.0) / 100 * ${preferred_scale}) - (px(160.0) / 100 * ${preferred_scale})","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[-2,0,0,0],"name":"GUI","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.91068375 * ${screen_width} - (px(80.0) / 100 * ${preferred_scale}) + (px(80.0) / 100 * ${preferred_scale}) - (px(160.0) / 100 * ${preferred_scale})","dynamicY":"0.63148147 * ${screen_height} - (px(53.333332) /100 * ${preferred_scale}) - (px(53.333332) /100 * ${preferred_scale}) - ${margin} + (px(53.333332) /100 * ${preferred_scale}) + ${margin}","height":53.333332,"isSwipeable":false,"isToggle":false,"keycodes":[-3,0,0,0],"name":"PRI","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.91068375 * ${screen_width} - ${width}","dynamicY":"0.63148147 * ${screen_height} - ${height}","height":53.333332,"isSwipeable":false,"isToggle":false,"keycodes":[-4,0,0,0],"name":"SEC","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"1.0 * ${screen_width} - ${width}","dynamicY":"0.0 * ${screen_height}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[-5,0,0,0],"name":"Mouse","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0 * ${screen_width} + (px(160.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[292,0,0,0],"name":"F3","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0 * ${screen_width} + (px(160.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(60.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[84,0,0,0],"name":"T","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0 * ${screen_width} + (px(160.0) / 100 * ${preferred_scale}) - (px(80.0) / 100 * ${preferred_scale}) + (px(160.0) / 100 * ${preferred_scale}) + ${margin} - ${width} - ${margin}","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(60.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(60.0) /100 * ${preferred_scale}) - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[294,0,0,0],"name":"F5","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0 * ${screen_width}","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(60.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - (px(30.0) /100 * ${preferred_scale}) - ${margin} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[258,0,0,0],"name":"TAB","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} + (px(100.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(50.0) /100 * ${preferred_scale}) + ${margin}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[87,0,0,0],"name":"▲","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin} + (px(100.0) / 100 * ${preferred_scale}) - (px(50.0) / 100 * ${preferred_scale}) + (px(50.0) / 100 * ${preferred_scale}) + ${margin} - ${width} - ${margin}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(100.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) + (px(100.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) + (px(50.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[83,0,0,0],"name":"▼","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} + (px(100.0) / 100 * ${preferred_scale}) - (px(50.0) / 100 * ${preferred_scale}) + (px(100.0) / 100 * ${preferred_scale}) - (px(50.0) / 100 * ${preferred_scale}) + (px(50.0) / 100 * ${preferred_scale}) + ${margin} - ${width} - ${margin}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(50.0) /100 * ${preferred_scale}) + ${margin} + (px(100.0) /100 * ${preferred_scale}) - ${height}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[68,0,0,0],"name":"▶","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin} + (px(100.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(100.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale})","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[0,0,0,0],"name":"","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.91068375 * ${screen_width} - (px(80.0) / 100 * ${preferred_scale}) + (px(80.0) / 100 * ${preferred_scale}) + ${margin} - ${width} - ${margin}","dynamicY":"0.63148147 * ${screen_height} - (px(53.333332) /100 * ${preferred_scale}) - (px(53.333332) /100 * ${preferred_scale}) - ${margin} + (px(53.333332) /100 * ${preferred_scale}) + ${margin} + (px(106.666664) /100 * ${preferred_scale}) - ${height}","height":53.333332,"isSwipeable":false,"isToggle":false,"keycodes":[32,0,0,0],"name":"■","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - ${height} - ${margin}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[65,87,0,0],"name":"◤","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} + (px(100.0) / 100 * ${preferred_scale}) - (px(50.0) / 100 * ${preferred_scale}) + (px(100.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(50.0) /100 * ${preferred_scale}) + ${margin}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[87,68,0,0],"name":"◥","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} + (px(100.0) / 100 * ${preferred_scale}) - (px(50.0) / 100 * ${preferred_scale}) + (px(100.0) / 100 * ${preferred_scale}) - (px(50.0) / 100 * ${preferred_scale}) + (px(50.0) / 100 * ${preferred_scale}) + ${margin} - ${width} - ${margin}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(100.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) + (px(100.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) + (px(50.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[68,83,0,0],"name":"◢","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(100.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) + (px(100.0) /100 * ${preferred_scale}) - ${height}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[83,65,0,0],"name":"◣","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0 * ${screen_width}","dynamicY":"0.0 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[256,0,0,0],"name":"ESC","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.0508547 * ${screen_width} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin}","dynamicY":"0.87777776 * ${screen_height} - (px(50.0) /100 * ${preferred_scale}) - (px(50.0) /100 * ${preferred_scale}) - ${margin} - (px(50.0) /100 * ${preferred_scale}) - ${margin} + (px(100.0) /100 * ${preferred_scale}) - ${height}","height":50.0,"isSwipeable":true,"isToggle":false,"keycodes":[65,0,0,0],"name":"◀","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":50.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.91068375 * ${screen_width} - (px(80.0) / 100 * ${preferred_scale}) + (px(80.0) / 100 * ${preferred_scale}) - (px(160.0) / 100 * ${preferred_scale}) - (px(80.0) / 100 * ${preferred_scale}) - ${margin} + (px(80.0) / 100 * ${preferred_scale}) + ${margin}","dynamicY":"0.63148147 * ${screen_height} - (px(53.333332) /100 * ${preferred_scale}) - (px(53.333332) /100 * ${preferred_scale}) - ${margin} + (px(53.333332) /100 * ${preferred_scale}) + ${margin} + (px(106.666664) /100 * ${preferred_scale}) - ${height}","height":53.333332,"isSwipeable":false,"isToggle":false,"keycodes":[340,0,0,0],"name":"□","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":false,"dynamicX":"0.91068375 * ${screen_width} - (px(80.0) / 100 * ${preferred_scale}) + (px(80.0) / 100 * ${preferred_scale}) - (px(160.0) / 100 * ${preferred_scale}) - (px(80.0) / 100 * ${preferred_scale}) - ${margin} + (px(80.0) / 100 * ${preferred_scale}) + ${margin} - (px(40.0) / 100 * ${preferred_scale}) - ${margin} + (px(40.0) / 100 * ${preferred_scale}) + ${margin} - (px(40.0) / 100 * ${preferred_scale}) - ${margin} + (px(40.0) / 100 * ${preferred_scale}) + ${margin}","dynamicY":"1.0 * ${screen_height} - ${height}","height":40.0,"isSwipeable":false,"isToggle":false,"keycodes":[69,0,0,0],"name":"E","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":40.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0508547 * ${screen_width} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin} - (px(13.333333) / 100 * ${preferred_scale}) - ${margin} + (px(13.333333) / 100 * ${preferred_scale}) + ${margin}","dynamicY":"0.25833333 * ${screen_height}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[341,0,0,0],"name":"Ctrl","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0},{"bgColor":1291845632,"cornerRadius":0.0,"displayInGame":true,"displayInMenu":true,"dynamicX":"0.0508547 * ${screen_width} - (px(3.3333333) / 100 * ${preferred_scale}) - ${margin} + (px(3.3333333) / 100 * ${preferred_scale}) + ${margin} - (px(13.333333) / 100 * ${preferred_scale}) - ${margin} + (px(13.333333) / 100 * ${preferred_scale}) + ${margin} + (px(160.0) / 100 * ${preferred_scale}) - ${width}","dynamicY":"0.25833333 * ${screen_height} + (px(30.0) /100 * ${preferred_scale}) + ${margin} - ${height} - ${margin}","height":30.0,"isSwipeable":false,"isToggle":false,"keycodes":[342,0,0,0],"name":"Alt","opacity":1.0,"passThruEnabled":false,"strokeColor":-1,"strokeWidth":0.0,"width":80.0}],"mControlInfoDataList":{"author":"null","desc":"control.default.desc.text","name":"control.default.title.text","version":"null"},"mDrawerDataList":[],"mJoystickDataList":[],"scaledAt":100.0,"version":8}
+\ No newline at end of file
++{
++  "mControlDataList": [
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": true,
++      "dynamicX": "0.012 * ${screen_width}",
++      "dynamicY": "0.02 * ${screen_height}",
++      "height": 34.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        256,
++        0,
++        0,
++        0
++      ],
++      "name": "ESC",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 56.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": false,
++      "dynamicX": "0.10 * ${screen_width}",
++      "dynamicY": "0.02 * ${screen_height}",
++      "height": 34.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        84,
++        0,
++        0,
++        0
++      ],
++      "name": "CHAT",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 56.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": true,
++      "dynamicX": "0.188 * ${screen_width}",
++      "dynamicY": "0.02 * ${screen_height}",
++      "height": 34.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        -1,
++        0,
++        0,
++        0
++      ],
++      "name": "KEYS",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 56.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": true,
++      "dynamicX": "0.97 * ${screen_width} - ${width}",
++      "dynamicY": "0.28 * ${screen_height}",
++      "height": 34.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        69,
++        0,
++        0,
++        0
++      ],
++      "name": "INV",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 56.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": false,
++      "dynamicX": "0.97 * ${screen_width} - ${width}",
++      "dynamicY": "0.96 * ${screen_height} - ${height}",
++      "height": 56.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        32,
++        0,
++        0,
++        0
++      ],
++      "name": "JUMP",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 84.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": false,
++      "dynamicX": "0.97 * ${screen_width} - ${width} - ${width} - ${margin}",
++      "dynamicY": "0.96 * ${screen_height} - ${height}",
++      "height": 56.0,
++      "isSwipeable": false,
++      "isToggle": true,
++      "keycodes": [
++        340,
++        0,
++        0,
++        0
++      ],
++      "name": "SNEAK",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 84.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": false,
++      "dynamicX": "0.97 * ${screen_width} - ${width}",
++      "dynamicY": "0.96 * ${screen_height} - ${height} - ${height} - ${margin}",
++      "height": 56.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        -3,
++        0,
++        0,
++        0
++      ],
++      "name": "ATK",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 84.0
++    },
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 30.0,
++      "displayInGame": true,
++      "displayInMenu": false,
++      "dynamicX": "0.97 * ${screen_width} - ${width} - ${width} - ${margin}",
++      "dynamicY": "0.96 * ${screen_height} - ${height} - ${height} - ${margin}",
++      "height": 56.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        -4,
++        0,
++        0,
++        0
++      ],
++      "name": "USE",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 1.5,
++      "width": 84.0
++    }
++  ],
++  "mControlInfoDataList": {
++    "author": "Pocket Client",
++    "desc": "control.default.desc.text",
++    "name": "control.default.title.text",
++    "version": "null"
++  },
++  "mDrawerDataList": [],
++  "mJoystickDataList": [
++    {
++      "bgColor": 1711276032,
++      "cornerRadius": 100.0,
++      "displayInGame": true,
++      "displayInMenu": false,
++      "dynamicX": "0.035 * ${screen_width}",
++      "dynamicY": "0.97 * ${screen_height} - ${height}",
++      "height": 110.0,
++      "isSwipeable": false,
++      "isToggle": false,
++      "keycodes": [
++        0,
++        0,
++        0,
++        0
++      ],
++      "name": "",
++      "opacity": 1.0,
++      "passThruEnabled": false,
++      "strokeColor": -1,
++      "strokeWidth": 0.0,
++      "width": 110.0,
++      "forwardLock": true,
++      "absolute": false
++    }
++  ],
++  "scaledAt": 100.0,
++  "version": 8
++}
+\ No newline at end of file
 diff --git a/ZalithLauncher/src/main/assets/options.txt b/ZalithLauncher/src/main/assets/options.txt
 index 7c7b10f..a928d9b 100644
 --- a/ZalithLauncher/src/main/assets/options.txt
@@ -185,7 +417,7 @@ index a9c446b..49a7297 100644
  
              val launchArgs = LaunchArgs(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index 74ff062..6a05380 100644
+index 74ff062..2978c1c 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 @@ -29,7 +29,7 @@ class AllSettings {
@@ -197,6 +429,31 @@ index 74ff062..6a05380 100644
  
          @JvmStatic
          val alternateSurface = BooleanSettingUnit("alternate_surface", false)
+@@ -66,7 +66,7 @@ class AllSettings {
+         val mouseSpeed = IntSettingUnit("mousespeed", 100)
+ 
+         @JvmStatic
+-        val virtualMouseStart = BooleanSettingUnit("mouse_start", true)
++        val virtualMouseStart = BooleanSettingUnit("mouse_start", false)
+ 
+         @JvmStatic
+         val customMouse = StringSettingUnit("custom_mouse", "")
+@@ -133,13 +133,13 @@ class AllSettings {
+         val gameMenuMemoryText = StringSettingUnit("gameMenuMemoryText", "M:")
+ 
+         @JvmStatic
+-        val gameMenuLocation = StringSettingUnit("gameMenuLocation", "center")
++        val gameMenuLocation = StringSettingUnit("gameMenuLocation", "right_or_top")
+ 
+         @JvmStatic
+         val gameMenuInfoRefreshRate = IntSettingUnit("gameMenuInfoRefreshRate", 1000)
+ 
+         @JvmStatic
+-        val gameMenuAlpha = IntSettingUnit("gameMenuAlpha", 100)
++        val gameMenuAlpha = IntSettingUnit("gameMenuAlpha", 55)
+ 
+         // Launcher
+         @JvmStatic
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
 index 062ca71..1a4d85f 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/ErrorActivity.kt
@@ -219,6 +476,24 @@ index 062ca71..1a4d85f 100644
  
              this.topView.setBackgroundColor(ContextCompat.getColor(context, R.color.background_menu_top))
              this.background.setBackgroundColor(ContextCompat.getColor(context, R.color.background_app))
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
+index af37e30..6ac58c6 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
+@@ -12,8 +12,11 @@ class CopyDefaultFromAssets {
+         @Throws(IOException::class)
+         fun copyFromAssets(context: Context?) {
+             //默认控制布局
+-            if (checkDirectoryEmpty(PathManager.DIR_CTRLMAP_PATH)) {
+-                Tools.copyAssetFile(context, "default.json", PathManager.DIR_CTRLMAP_PATH, false)
++            val defaultLayout = File(PathManager.DIR_CTRLMAP_PATH, "default.json")
++            //Pocket Client: replace an older stock layout once. Layouts that already carry the marker (and any edits to them) are kept.
++            val stockLayout = defaultLayout.exists() && !defaultLayout.readText().contains("Pocket Client")
++            if (checkDirectoryEmpty(PathManager.DIR_CTRLMAP_PATH) || stockLayout) {
++                Tools.copyAssetFile(context, "default.json", PathManager.DIR_CTRLMAP_PATH, stockLayout)
+             }
+         }
+ 
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
 index 9b593fa..d8cd486 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
