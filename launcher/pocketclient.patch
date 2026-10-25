@@ -1,0 +1,151 @@
+diff --git a/ZalithLauncher/gradle.properties b/ZalithLauncher/gradle.properties
+index 873f312..0f6fc3a 100644
+--- a/ZalithLauncher/gradle.properties
++++ b/ZalithLauncher/gradle.properties
+@@ -1,5 +1,5 @@
+ launcher_name=ZalithLauncher
+-launcher_app_name=Zalith Launcher
++launcher_app_name=Pocket Client
+ 
+ launcher_version_code=141400
+ launcher_version_name=1.4.1.4
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/assets/options.txt b/ZalithLauncher/src/main/assets/options.txt
+index 7c7b10f..a928d9b 100644
+--- a/ZalithLauncher/src/main/assets/options.txt
++++ b/ZalithLauncher/src/main/assets/options.txt
+@@ -1,19 +1,25 @@
+ fov:0.0
+-renderDistance:4
++renderDistance:6
+ simulationDistance:5
+ particles:1
+ bobView:true
+ anaglyph3d:false
+ advancedOpengl:false
+-maxFps:260
++maxFps:120
+ fboEnable:true
+ fancyGraphics:false
+-ao:0
++ao:false
+ clouds:true
++graphicsMode:0
++renderClouds:"false"
++entityShadows:false
++biomeBlendRadius:0
++entityDistanceScaling:0.75
+ snooperEnabled:true
+ enableVsync:false
+ pauseOnLostFocus:true
+ touchscreen:false
++autoJump:true
+ heldItemTooltips:true
+ showInventoryAchievementHint:false
+ mipmapLevels:0
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/BuiltinMods.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/BuiltinMods.kt
+new file mode 100644
+index 0000000..4ce19bc
+--- /dev/null
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/BuiltinMods.kt
+@@ -0,0 +1,67 @@
++package com.movtery.zalithlauncher.feature
++
++import android.content.Context
++import com.movtery.zalithlauncher.feature.log.Logging
++import com.movtery.zalithlauncher.feature.version.Version
++import net.kdt.pojavlaunch.Tools
++import java.io.File
++
++/**
++ * Pocket Client: installs the mods bundled in assets/builtin_mods into a version's mods folder.
++ *
++ * Asset names look like `<keyword>__<real-file-name>.jar`:
++ *  - `pocketclient__...` is the client mod itself. It is refreshed on every launch,
++ *    so a launcher update also updates the mod.
++ *  - Any other keyword (fabric-api, ferritecore, ...) is installed only the first time a version
++ *    is launched, and only if no jar with that keyword in its name exists yet. Delete them
++ *    from the mods folder and they stay deleted.
++ *
++ * Installs only into version-isolated Fabric versions of [TARGET_MC_VERSION], because the
++ * bundled jars were built for exactly that Minecraft version. If the assets folder is empty
++ * (a build without the bundle), this does nothing.
++ */
++object BuiltinMods {
++    private const val TAG = "BuiltinMods"
++    private const val ASSET_DIR = "builtin_mods"
++    private const val OWN_KEYWORD = "pocketclient"
++    private const val TARGET_MC_VERSION = "1.21.1"
++    private const val MARKER_NAME = ".pocketclient-builtin"
++
++    @JvmStatic
++    fun install(context: Context, version: Version) {
++        runCatching {
++            if (!version.isIsolation()) return
++            val info = version.getVersionInfo() ?: return
++            if (info.minecraftVersion != TARGET_MC_VERSION) return
++            if (info.loaderInfo?.any { it.name == "Fabric" } != true) return
++
++            val assets = context.assets.list(ASSET_DIR)?.filter { it.endsWith(".jar") && it.contains("__") }
++            if (assets.isNullOrEmpty()) return
++
++            val modsDir = File(version.getGameDir(), "mods").apply { mkdirs() }
++            val marker = File(modsDir, MARKER_NAME)
++            val firstRun = !marker.exists()
++            val existing = modsDir.listFiles { f -> f.isFile && f.name.endsWith(".jar") }
++                ?.map { it.name.lowercase() }
++                .orEmpty()
++
++            for (asset in assets) {
++                val keyword = asset.substringBefore("__").lowercase()
++                val fileName = asset.substringAfter("__")
++
++                if (keyword == OWN_KEYWORD) {
++                    modsDir.listFiles { f -> f.isFile && f.name.lowercase().startsWith(OWN_KEYWORD) && f.name != fileName }
++                        ?.forEach { it.delete() }
++                    Tools.copyAssetFile(context, "$ASSET_DIR/$asset", modsDir.absolutePath, fileName, true)
++                } else if (firstRun && existing.none { it.contains(keyword) }) {
++                    Tools.copyAssetFile(context, "$ASSET_DIR/$asset", modsDir.absolutePath, fileName, false)
++                }
++            }
++
++            if (firstRun) marker.createNewFile()
++            Logging.i(TAG, "Built-in mods installed into ${modsDir.absolutePath}")
++        }.onFailure { e ->
++            Logging.e(TAG, "Failed to install built-in mods: ${Tools.printToString(e)}")
++        }
++    }
++}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt
+index a9c446b..49a7297 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt
+@@ -11,6 +11,7 @@ import com.movtery.zalithlauncher.event.single.AccountUpdateEvent
+ import com.movtery.zalithlauncher.feature.accounts.AccountType
+ import com.movtery.zalithlauncher.feature.accounts.AccountUtils
+ import com.movtery.zalithlauncher.feature.accounts.AccountsManager
++import com.movtery.zalithlauncher.feature.BuiltinMods
+ import com.movtery.zalithlauncher.feature.log.Logging
+ import com.movtery.zalithlauncher.feature.version.Version
+ import com.movtery.zalithlauncher.renderer.Renderers
+@@ -229,6 +230,7 @@ class LaunchGame {
+ 
+             //预处理
+             Tools.disableSplash(gameDirPath)
++            BuiltinMods.install(activity, minecraftVersion) //Pocket Client: bundled mods
+             val launchClassPath = Tools.generateLaunchClassPath(versionInfo, minecraftVersion)
+ 
+             val launchArgs = LaunchArgs(
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
+index 74ff062..6a05380 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
+@@ -29,7 +29,7 @@ class AllSettings {
+         val resolutionRatio = IntSettingUnit("resolutionRatio", 100)
+ 
+         @JvmStatic
+-        val sustainedPerformance = BooleanSettingUnit("sustainedPerformance", false)
++        val sustainedPerformance = BooleanSettingUnit("sustainedPerformance", true)
+ 
+         @JvmStatic
+         val alternateSurface = BooleanSettingUnit("alternate_surface", false)
