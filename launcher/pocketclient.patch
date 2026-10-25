@@ -243,7 +243,7 @@ index 48b3d2c..ee2a9cc 100644
 +}
 \ No newline at end of file
 diff --git a/ZalithLauncher/src/main/assets/options.txt b/ZalithLauncher/src/main/assets/options.txt
-index 7c7b10f..a928d9b 100644
+index 7c7b10f..221aab0 100644
 --- a/ZalithLauncher/src/main/assets/options.txt
 +++ b/ZalithLauncher/src/main/assets/options.txt
 @@ -1,19 +1,25 @@
@@ -256,7 +256,7 @@ index 7c7b10f..a928d9b 100644
  anaglyph3d:false
  advancedOpengl:false
 -maxFps:260
-+maxFps:120
++maxFps:60
  fboEnable:true
  fancyGraphics:false
 -ao:0
@@ -373,6 +373,44 @@ index 0000000..698a91c
 +        }
 +    }
 +}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/MCOptions.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/MCOptions.kt
+index e992eab..039185c 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/MCOptions.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/MCOptions.kt
+@@ -44,6 +44,33 @@ object MCOptions {
+         }
+ 
+         load()
++        tuneForDevice(context)
++    }
++
++    /**
++     * Pocket Client: once per game directory, picks distances and an FPS cap that fit the phone.
++     * 60 FPS instead of 120 roughly halves GPU work and battery drain; weak phones get shorter distances.
++     * Runs only once, so anything the player changes afterwards is kept.
++     */
++    private fun tuneForDevice(context: Context) {
++        try {
++            val optionsFile = getOptionsFile()
++            val marker = File(optionsFile.parentFile, ".pocketclient-tuned")
++            if (marker.exists() || !optionsFile.exists()) return
++
++            val ram = Tools.getTotalDeviceMemory(context)
++            val values = when {
++                ram < 4096 -> listOf("renderDistance" to "4", "simulationDistance" to "4", "maxFps" to "40", "particles" to "2")
++                ram < 8192 -> listOf("renderDistance" to "6", "simulationDistance" to "5", "maxFps" to "60", "particles" to "1")
++                else -> listOf("renderDistance" to "8", "simulationDistance" to "6", "maxFps" to "60", "particles" to "1")
++            }
++            values.forEach { (key, value) -> set(key, value) }
++            save()
++            marker.createNewFile()
++            Logging.i("MCOptions", "Tuned options for a device with $ram MB RAM: $values")
++        } catch (e: Exception) {
++            Logging.e("MCOptions", "Could not tune options: " + Tools.printToString(e))
++        }
+     }
+ 
+     private fun load() {
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt
 new file mode 100644
 index 0000000..0aafc00
@@ -697,11 +735,15 @@ index a9c446b..49a7297 100644
  
              val launchArgs = LaunchArgs(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index 74ff062..4d4efdd 100644
+index 74ff062..283bba7 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-@@ -29,7 +29,7 @@ class AllSettings {
-         val resolutionRatio = IntSettingUnit("resolutionRatio", 100)
+@@ -26,10 +26,10 @@ class AllSettings {
+         val ignoreNotchLauncher = BooleanSettingUnit("ignoreNotchLauncher", true)
+ 
+         @JvmStatic
+-        val resolutionRatio = IntSettingUnit("resolutionRatio", 100)
++        val resolutionRatio = IntSettingUnit("resolutionRatio", 80) //Pocket Client: 80% looks the same on a phone screen and saves a lot of GPU/battery
  
          @JvmStatic
 -        val sustainedPerformance = BooleanSettingUnit("sustainedPerformance", false)
