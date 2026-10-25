@@ -1,3 +1,31 @@
+diff --git a/ZalithLauncher/build.gradle.kts b/ZalithLauncher/build.gradle.kts
+index ada8a5d..c268538 100644
+--- a/ZalithLauncher/build.gradle.kts
++++ b/ZalithLauncher/build.gradle.kts
+@@ -56,16 +56,17 @@ android {
+             keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
+         }
+         create("debugBuild") {
+-            storeFile = file("zalith_launcher_debug.jks")
+-            storePassword = defaultStorePassword
+-            keyAlias = "movtery_zalith_debug"
+-            keyPassword = defaultKeyPassword
++            //Pocket Client: same key as Pocket Client 1 (Zalith Launcher 1 debug.keystore, copied in by CI)
++            //so this build installs as an update over the existing app.
++            storeFile = file("debug.keystore")
++            storePassword = "android"
++            keyAlias = "androiddebugkey"
++            keyPassword = "android"
+         }
+     }
+ 
+     defaultConfig {
+-        applicationId = zalithPackageName
+-        applicationIdSuffix = ".v2"
++        applicationId = zalithPackageName //Pocket Client: no ".v2" suffix, same package as Pocket Client 1
+         minSdk = 26
+         targetSdk = 34
+         versionCode = launcherVersionCode
 diff --git a/ZalithLauncher/gradle.properties b/ZalithLauncher/gradle.properties
 index b0f3e16..90d5ed1 100644
 --- a/ZalithLauncher/gradle.properties

@@ -1,7 +1,7 @@
 # Pocket Client 2: built on Zalith Launcher 2 (supports Minecraft 1.21 through 26.x).
 # Checks out ZL2 at a pinned commit, applies launcher2/pocketclient.patch and builds an arm64 debug APK.
 # Builds are published as pre-releases tagged v2-<code> so they never replace the "latest" release
-# that the current (v1) app reads for its own updates.
+# that the current (v1) app reads for its own updates. Same package and key as v1, so it installs over it.
 name: Build Pocket Client 2 APK
 
 on:
@@ -39,8 +39,21 @@ jobs:
           path: zl2
           submodules: recursive
 
+      # The debug key of Zalith Launcher 1 signs Pocket Client 1. Using it here lets Pocket Client 2
+      # install as an update over the existing app instead of as a second app.
+      - name: Fetch Pocket Client 1 signing key
+        uses: actions/checkout@v6
+        with:
+          repository: ZalithLauncher/ZalithLauncher
+          ref: ed8a5c873b25f19d08aef5bdfc1084fd9aff836c
+          path: zl1
+          sparse-checkout: ZalithLauncher/debug.keystore
+          sparse-checkout-cone-mode: false
+
       - name: Apply Pocket Client patch
-        run: git -C zl2 apply "$GITHUB_WORKSPACE/launcher2/pocketclient.patch"
+        run: |
+          git -C zl2 apply "$GITHUB_WORKSPACE/launcher2/pocketclient.patch"
+          cp zl1/ZalithLauncher/debug.keystore zl2/ZalithLauncher/debug.keystore
 
       - name: Set launcher version
         run: |
@@ -101,7 +114,7 @@ jobs:
           gh release create "v2-${VERSION_CODE}" release2/* \
             --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "Pocket Client 2 ${VERSION_NAME} (test)" \
-            --notes "Test build on Zalith Launcher 2 (Minecraft 1.21 - 26.x). Installs as a separate app next to Pocket Client. $(git log -1 --pretty=%s)"
+            --notes "Test build on Zalith Launcher 2 (Minecraft 1.21 - 26.x). Installs as an update over Pocket Client 1 (same app). There is no way back without uninstalling. $(git log -1 --pretty=%s)"
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
