@@ -116,6 +116,54 @@ index 0000000..4ce19bc
 +        }
 +    }
 +}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt
+index 607f680..0e0d22f 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/update/UpdateUtils.kt
+@@ -45,7 +45,8 @@ class UpdateUtils {
+                 return
+             }
+ 
+-            val isRelease = (ZHTools.isRelease() || ZHTools.isPreRelease()) && !ZHTools.isDebug()
++            //Pocket Client ships debug-signed builds, so the stock "release builds only" gate is skipped
++            val isRelease = true
+ 
+             if (sApkFile.exists()) {
+                 val packageManager = context.packageManager
+@@ -96,9 +97,8 @@ class UpdateUtils {
+                         Logging.e("UpdateLauncher", "Unexpected code " + response.code)
+                     } else {
+                         try {
+-                            val jsonObject = JSONObject(response.body!!.string())
+-                            val rawBase64 = jsonObject.getString("content")
+-                            val rawJson = StringUtils.decodeBase64(rawBase64)
++                            //launcher_version.json is a plain release asset, not a base64 API response
++                            val rawJson = response.body!!.string()
+ 
+                             val launcherVersion = Tools.GLOBAL_GSON.fromJson(rawJson, LauncherVersion::class.java)
+ 
+@@ -131,7 +131,7 @@ class UpdateUtils {
+                         }
+                     }
+                 }
+-            }, "${UrlManager.URL_GITHUB_HOME}launcher_version.json", null).enqueue()
++            }, UrlManager.URL_PC_UPDATE_INFO, null).enqueue()
+         }
+ 
+         @JvmStatic
+@@ -163,9 +163,9 @@ class UpdateUtils {
+         @JvmStatic
+         fun getDownloadUrl(launcherVersion: LauncherVersion): String {
+             val archModel = getArchModel()
+-            return "https://github.com/ZalithLauncher/ZalithLauncher/releases/download/" +
+-                    "${launcherVersion.versionCode}/ZalithLauncher-${launcherVersion.versionName}" +
+-                    "${(if (archModel != null) String.format("-%s", archModel) else "")}.apk"
++            //Pocket Client: the workflow publishes PocketClient-<abi>.apk to every release
++            return UrlManager.URL_PC_DOWNLOAD + "PocketClient" +
++                    (if (archModel != null) String.format("-%s", archModel) else "") + ".apk"
+         }
+ 
+         @JvmStatic
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt
 index a9c446b..49a7297 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/launch/LaunchGame.kt
@@ -149,3 +197,17 @@ index 74ff062..6a05380 100644
  
          @JvmStatic
          val alternateSurface = BooleanSettingUnit("alternate_surface", false)
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
+index 9b593fa..d8cd486 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/path/UrlManager.kt
+@@ -17,6 +17,9 @@ class UrlManager {
+         @JvmField
+         val TIME_OUT = Pair(8000, TimeUnit.MILLISECONDS)
+         const val URL_GITHUB_HOME: String = "https://api.github.com/repos/ZalithLauncher/Zalith-Info/contents/"
++        // Pocket Client: updates come from this repo's latest GitHub Release
++        const val URL_PC_UPDATE_INFO: String = "https://github.com/kit531/pocket-client/releases/latest/download/launcher_version.json"
++        const val URL_PC_DOWNLOAD: String = "https://github.com/kit531/pocket-client/releases/latest/download/"
+         const val URL_MCMOD: String = "https://www.mcmod.cn/"
+         const val URL_MINECRAFT: String = "https://www.minecraft.net/"
+         const val URL_MINECRAFT_VERSION_REPOS: String = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
