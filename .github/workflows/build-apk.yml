@@ -40,11 +40,13 @@ jobs:
       - name: Apply Pocket Client patch
         run: git -C zl apply "$GITHUB_WORKSPACE/launcher/pocketclient.patch"
 
-      - name: Set up JDK 21 (mod)
+      # Fabric Loom 1.19 needs Java 25 to run Gradle. The mod itself is still compiled
+      # for Java 21 (options.release = 21 in mod/build.gradle), which is what the game runs.
+      - name: Set up JDK 25 (mod)
         uses: actions/setup-java@v5
         with:
-          distribution: temurin
-          java-version: "21"
+          distribution: microsoft
+          java-version: "25"
 
       - name: Build client mod
         working-directory: mod
