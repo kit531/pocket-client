@@ -348,6 +348,31 @@ index 0000000..4ce19bc
 +        }
 +    }
 +}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/LauncherOrientation.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/LauncherOrientation.kt
+new file mode 100644
+index 0000000..698a91c
+--- /dev/null
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/LauncherOrientation.kt
+@@ -0,0 +1,19 @@
++package com.movtery.zalithlauncher.feature
++
++import android.app.Activity
++import android.content.pm.ActivityInfo
++import com.movtery.zalithlauncher.setting.AllSettings
++
++/**
++ * Pocket Client: lets the launcher screens (not the game) run in portrait or rotate freely.
++ */
++object LauncherOrientation {
++    @JvmStatic
++    fun apply(activity: Activity) {
++        activity.requestedOrientation = when (AllSettings.launcherOrientation.getValue()) {
++            "portrait" -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
++            "auto" -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
++            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
++        }
++    }
++}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/feature/ModAutoFix.kt
 new file mode 100644
 index 0000000..0aafc00
@@ -672,7 +697,7 @@ index a9c446b..49a7297 100644
  
              val launchArgs = LaunchArgs(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index 74ff062..2978c1c 100644
+index 74ff062..4d4efdd 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 @@ -29,7 +29,7 @@ class AllSettings {
@@ -693,12 +718,16 @@ index 74ff062..2978c1c 100644
  
          @JvmStatic
          val customMouse = StringSettingUnit("custom_mouse", "")
-@@ -133,13 +133,13 @@ class AllSettings {
+@@ -133,13 +133,17 @@ class AllSettings {
          val gameMenuMemoryText = StringSettingUnit("gameMenuMemoryText", "M:")
  
          @JvmStatic
 -        val gameMenuLocation = StringSettingUnit("gameMenuLocation", "center")
 +        val gameMenuLocation = StringSettingUnit("gameMenuLocation", "right_or_top")
++
++        //Pocket Client: launcher screen orientation (landscape / portrait / auto)
++        @JvmStatic
++        val launcherOrientation = StringSettingUnit("launcherOrientation", "auto")
  
          @JvmStatic
          val gameMenuInfoRefreshRate = IntSettingUnit("gameMenuInfoRefreshRate", 1000)
@@ -775,6 +804,38 @@ index 062ca71..7a333d0 100644
      }
  
      private fun showEasterEgg() {
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/SplashActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/SplashActivity.kt
+index facbf34..62e4434 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/SplashActivity.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activity/SplashActivity.kt
+@@ -32,6 +32,7 @@ class SplashActivity : BaseActivity() {
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
++        com.movtery.zalithlauncher.feature.LauncherOrientation.apply(this)
+ 
+         initItems()
+ 
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/fragment/settings/LauncherSettingsFragment.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/fragment/settings/LauncherSettingsFragment.kt
+index 26b2c24..ec1404b 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/fragment/settings/LauncherSettingsFragment.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/fragment/settings/LauncherSettingsFragment.kt
+@@ -90,6 +90,15 @@ class LauncherSettingsFragment() : AbstractSettingsFragment(R.layout.settings_fr
+             ""
+         )
+ 
++        ListSettingsWrapper(
++            context,
++            AllSettings.launcherOrientation,
++            binding.launcherOrientationLayout,
++            binding.launcherOrientationTitle,
++            binding.launcherOrientationValue,
++            R.array.pc_orientation_names, R.array.pc_orientation_values
++        ).setRequiresReboot()
++
+         ListSettingsWrapper(
+             context,
+             AllSettings.launcherTheme,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
 index af37e30..6ac58c6 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/utils/CopyDefaultFromAssets.kt
@@ -807,6 +868,18 @@ index 9b593fa..d8cd486 100644
          const val URL_MCMOD: String = "https://www.mcmod.cn/"
          const val URL_MINECRAFT: String = "https://www.minecraft.net/"
          const val URL_MINECRAFT_VERSION_REPOS: String = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+diff --git a/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/LauncherActivity.java b/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/LauncherActivity.java
+index 9a1fb5b..9978bfb 100644
+--- a/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/LauncherActivity.java
++++ b/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/LauncherActivity.java
+@@ -350,6 +350,7 @@ public class LauncherActivity extends BaseActivity {
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
++        com.movtery.zalithlauncher.feature.LauncherOrientation.apply(this);
+         binding = ActivityLauncherBinding.inflate(getLayoutInflater());
+         setContentView(binding.getRoot());
+ 
 diff --git a/ZalithLauncher/src/main/res/layout/activity_error.xml b/ZalithLauncher/src/main/res/layout/activity_error.xml
 index 573b1fe..f6d081d 100644
 --- a/ZalithLauncher/src/main/res/layout/activity_error.xml
@@ -827,11 +900,70 @@ index 573b1fe..f6d081d 100644
          <com.movtery.zalithlauncher.ui.view.AnimButton
              android:id="@+id/share_log"
              android:layout_width="match_parent"
+diff --git a/ZalithLauncher/src/main/res/layout/settings_fragment_launcher.xml b/ZalithLauncher/src/main/res/layout/settings_fragment_launcher.xml
+index 092020c..4b517a2 100644
+--- a/ZalithLauncher/src/main/res/layout/settings_fragment_launcher.xml
++++ b/ZalithLauncher/src/main/res/layout/settings_fragment_launcher.xml
+@@ -274,6 +274,32 @@
+                 android:text="@string/setting_category_personalization"
+                 android:textColor="@color/settings_category" />
+ 
++            <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
++                android:id="@+id/launcherOrientation_layout"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:background="?android:attr/selectableItemBackground"
++                android:padding="@dimen/_12sdp">
++
++                <TextView
++                    android:id="@+id/launcherOrientation_title"
++                    android:layout_width="wrap_content"
++                    android:layout_height="wrap_content"
++                    android:layout_alignParentStart="true"
++                    android:layout_alignParentEnd="true"
++                    android:text="@string/pc_orientation"
++                    android:textColor="@color/black_or_white" />
++
++                <TextView
++                    android:id="@+id/launcherOrientation_value"
++                    android:layout_width="0dp"
++                    android:layout_height="wrap_content"
++                    android:layout_below="@+id/launcherOrientation_title"
++                    android:layout_alignParentStart="true"
++                    android:layout_alignParentEnd="true"
++                    android:text="@string/generic_default" />
++            </com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout>
++
+             <com.movtery.zalithlauncher.ui.layout.AnimRelativeLayout
+                 android:id="@+id/launcherTheme_layout"
+                 android:layout_width="match_parent"
+diff --git a/ZalithLauncher/src/main/res/values/headings_array.xml b/ZalithLauncher/src/main/res/values/headings_array.xml
+index e38b98c..02765f1 100644
+--- a/ZalithLauncher/src/main/res/values/headings_array.xml
++++ b/ZalithLauncher/src/main/res/values/headings_array.xml
+@@ -21,6 +21,17 @@
+         <item>auto</item>
+     </string-array>
+ 
++    <string-array name="pc_orientation_names">
++        <item>@string/pc_orientation_auto</item>
++        <item>@string/pc_orientation_portrait</item>
++        <item>@string/pc_orientation_landscape</item>
++    </string-array>
++    <string-array name="pc_orientation_values" translatable="false">
++        <item>auto</item>
++        <item>portrait</item>
++        <item>landscape</item>
++    </string-array>
++
+     <string-array name="launcher_theme_names">
+         <item>@string/setting_launcher_theme_system</item>
+         <item>@string/setting_launcher_theme_light</item>
 diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
-index ce85557..2e2f385 100644
+index ce85557..16213f5 100644
 --- a/ZalithLauncher/src/main/res/values/strings.xml
 +++ b/ZalithLauncher/src/main/res/values/strings.xml
-@@ -693,4 +693,10 @@
+@@ -693,4 +693,14 @@
      <!-- Sponsorship Related -->
      <string name="request_sponsorship_title">Support My Development</string>
      <string name="request_sponsorship_message">Most of the content in this software is developed and maintained by me alone. If you find this software helpful and are in a position to do so, I hope you will consider sponsoring me to give me more motivation to continue developing and improving it. Thank you for your support!</string>
@@ -840,5 +972,9 @@ index ce85557..2e2f385 100644
 +    <string name="pc_auto_fix_found">Auto-fix available:</string>
 +    <string name="pc_auto_fix_working">Fixing mods, please wait…</string>
 +    <string name="pc_auto_fix_done">Done. Press Restart to launch the game again.</string>
++    <string name="pc_orientation">Launcher Screen Orientation (game stays landscape)</string>
++    <string name="pc_orientation_auto">Auto-rotate</string>
++    <string name="pc_orientation_portrait">Portrait</string>
++    <string name="pc_orientation_landscape">Landscape</string>
 +    <string name="pc_auto_fix_skipped">Cannot be fixed automatically:</string>
  </resources>
