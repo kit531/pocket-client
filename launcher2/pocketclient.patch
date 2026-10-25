@@ -1,0 +1,31 @@
+diff --git a/ZalithLauncher/gradle.properties b/ZalithLauncher/gradle.properties
+index b0f3e16..90d5ed1 100644
+--- a/ZalithLauncher/gradle.properties
++++ b/ZalithLauncher/gradle.properties
+@@ -1,8 +1,8 @@
+ # launcher name & url
+-launcher_name=ZalithLauncher
+-launcher_app_name=Zalith Launcher
+-launcher_short_name=ZL2
+-url_home=https://github.com/ZalithLauncher/ZalithLauncher2
++launcher_name=PocketClient
++launcher_app_name=Pocket Client
++launcher_short_name=PC
++url_home=https://github.com/kit531/pocket-client
+ 
+ # your OAuth client id
+ #oauth_client_id=xxx
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
+index 798967a..660ae18 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
+@@ -92,7 +92,8 @@ private fun TopBar(
+         ) {
+             Text(
+                 modifier = Modifier.align(Alignment.CenterVertically),
+-                text = BuildKeys.LAUNCHER_NAME
++                //Pocket Client: required by the upstream license terms (GPLv3 section 7)
++                text = BuildKeys.LAUNCHER_NAME + " · Unofficial Modified Version"
+             )
+         }
+     }

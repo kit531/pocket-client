@@ -11,6 +11,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore:
+      - "launcher2/**"
+      - ".github/workflows/build-apk-v2.yml"
 
 permissions:
   contents: write # needed to publish the GitHub Release the in-app updater reads
