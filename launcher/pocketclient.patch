@@ -880,6 +880,59 @@ index 9a1fb5b..9978bfb 100644
          binding = ActivityLauncherBinding.inflate(getLayoutInflater());
          setContentView(binding.getRoot());
  
+diff --git a/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/prefs/LauncherPreferences.java b/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/prefs/LauncherPreferences.java
+index b63f812..7ddc1cf 100644
+--- a/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/prefs/LauncherPreferences.java
++++ b/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/prefs/LauncherPreferences.java
+@@ -61,7 +61,10 @@ public class LauncherPreferences {
+         if (deviceRam < 3064) return 936;
+         if (deviceRam < 4096) return 1144;
+         if (deviceRam < 6144) return 1536;
+-        return 2048; //Default RAM allocation for 64 bits
++        // Pocket Client: big modpacks run out of a 2 GB heap and stutter on garbage collection.
++        // Phones with 8 GB or more can afford 3 GB without the system killing the game.
++        if (deviceRam < 7168) return 2048;
++        return 3072;
+     }
+ 
+     /** Compute the notch size to avoid being out of bounds */
+diff --git a/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/utils/JREUtils.java b/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/utils/JREUtils.java
+index ae5ab31..45262c1 100644
+--- a/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/utils/JREUtils.java
++++ b/ZalithLauncher/src/main/java/net/kdt/pojavlaunch/utils/JREUtils.java
+@@ -360,6 +360,24 @@ public final class JREUtils {
+         }
+     }
+ 
++    /**
++     * Pocket Client: G1 tuned for short pauses. Most stutter in heavy modpacks on phones comes from
++     * long garbage-collection pauses, not from rendering. Skipped when the user set their own GC flags.
++     */
++    private static void addPocketGcArgs(List<String> userArgs) {
++        for (String arg : userArgs) {
++            if (arg.startsWith("-XX:+Use") && arg.endsWith("GC")) return;
++            if (arg.startsWith("-XX:MaxGCPauseMillis") || arg.startsWith("-XX:G1")) return;
++        }
++        userArgs.add("-XX:+UseG1GC");
++        userArgs.add("-XX:+UnlockExperimentalVMOptions");
++        userArgs.add("-XX:MaxGCPauseMillis=40");
++        userArgs.add("-XX:G1NewSizePercent=20");
++        userArgs.add("-XX:G1ReservePercent=20");
++        userArgs.add("-XX:+ParallelRefProcEnabled");
++        userArgs.add("-XX:+DisableExplicitGC");
++    }
++
+     private static void launchJavaVM(
+             final AppCompatActivity activity,
+             String runtimeHome,
+@@ -388,6 +406,7 @@ public final class JREUtils {
+         //Add automatically generated args
+         userArgs.add("-Xms" + AllSettings.getRamAllocation().getValue().getValue() + "M");
+         userArgs.add("-Xmx" + AllSettings.getRamAllocation().getValue().getValue() + "M");
++        addPocketGcArgs(userArgs);
+         if (Renderers.INSTANCE.isCurrentRendererValid()) userArgs.add("-Dorg.lwjgl.opengl.libname=" + loadGraphicsLibrary());
+ 
+         // Force LWJGL to use the Freetype library intended for it, instead of using the one
 diff --git a/ZalithLauncher/src/main/res/layout/activity_error.xml b/ZalithLauncher/src/main/res/layout/activity_error.xml
 index 573b1fe..f6d081d 100644
 --- a/ZalithLauncher/src/main/res/layout/activity_error.xml
