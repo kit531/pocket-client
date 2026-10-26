@@ -1,5 +1,5 @@
 diff --git a/ZalithLauncher/build.gradle.kts b/ZalithLauncher/build.gradle.kts
-index ada8a5d..c268538 100644
+index ada8a5d1..c268538f 100644
 --- a/ZalithLauncher/build.gradle.kts
 +++ b/ZalithLauncher/build.gradle.kts
 @@ -56,16 +56,17 @@ android {
@@ -27,7 +27,7 @@ index ada8a5d..c268538 100644
          targetSdk = 34
          versionCode = launcherVersionCode
 diff --git a/ZalithLauncher/gradle.properties b/ZalithLauncher/gradle.properties
-index b0f3e16..90d5ed1 100644
+index b0f3e16c..90d5ed17 100644
 --- a/ZalithLauncher/gradle.properties
 +++ b/ZalithLauncher/gradle.properties
 @@ -1,8 +1,8 @@
@@ -44,7 +44,7 @@ index b0f3e16..90d5ed1 100644
  # your OAuth client id
  #oauth_client_id=xxx
 diff --git a/ZalithLauncher/src/main/AndroidManifest.xml b/ZalithLauncher/src/main/AndroidManifest.xml
-index 8b715c9..20b7724 100644
+index 8b715c9c..20b7724f 100644
 --- a/ZalithLauncher/src/main/AndroidManifest.xml
 +++ b/ZalithLauncher/src/main/AndroidManifest.xml
 @@ -8,6 +8,7 @@
@@ -86,7 +86,7 @@ index 8b715c9..20b7724 100644
              android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
              android:screenOrientation="sensorLandscape" />
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
-index edc9af2..254d261 100644
+index edc9af29..254d2618 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
 @@ -37,6 +37,8 @@ import com.movtery.zalithlauncher.game.account.microsoft.NotPurchasedMinecraftEx
@@ -148,7 +148,7 @@ index edc9af2..254d261 100644
                  AuthType.Access,
                  tokenResponse.refreshToken,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
-index da9fa2a..bcf2ed9 100644
+index da9fa2ab..bcf2ed91 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 @@ -86,6 +86,38 @@ private const val TENANT = "/consumers"
@@ -277,7 +277,7 @@ index da9fa2a..bcf2ed9 100644
          try {
              requestXblToken("d=$accessToken")
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
-index f1a7854..9acf1cc 100644
+index f1a78543..9acf1cc6 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 @@ -34,5 +34,5 @@ data class DeviceCodeResponse(
@@ -289,18 +289,30 @@ index f1a7854..9acf1cc 100644
  )
 \ No newline at end of file
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
-index cdf896c..0a8ed22 100644
+index cdf896c9..eb20f610 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
-@@ -236,6 +236,7 @@ class GameLauncher(
+@@ -220,6 +220,8 @@ class GameLauncher(
+ 
+     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
+         super.progressFinalUserArgs(args, version.getRamAllocation(activity))
++        //Pocket Client: GC log next to the battery log (game only, not installers)
++        runCatching { runtime.javaVersion }.getOrNull()?.let { com.movtery.zalithlauncher.pocket.PocketTuning.addGcLog(args, it) }
+         if (Renderers.isCurrentRendererValid()) {
+             args.add("-Dorg.lwjgl.opengl.libname=${getRendererLibrary()}")
+         }
+@@ -236,6 +238,10 @@ class GameLauncher(
          val gameDirPath = version.getGameDir()
  
          disableSplash(gameDirPath)
-+        com.movtery.zalithlauncher.pocket.PocketTuning.tuneOptions(activity, gameDirPath) //Pocket Client
++        com.movtery.zalithlauncher.pocket.PocketTuning.tuneOptions(
++            activity, gameDirPath,
++            com.movtery.zalithlauncher.pocket.PocketTuning.effectiveHeapMb(version.getRamAllocation(activity))
++        ) //Pocket Client
  
          if (version.getVersionInfo()?.hasLoader(ModLoader.NEOFORGE) == true) {
              // 关闭NeoForge 12早期加载屏动画
-@@ -318,7 +319,22 @@ class GameLauncher(
+@@ -318,7 +324,22 @@ class GameLauncher(
       * 如果版本独立设置了运行环境，则直接选定它；
       * 如果版本未设置，则根据全局设置或自动选择
       */
@@ -324,22 +336,20 @@ index cdf896c..0a8ed22 100644
          if (versionRuntime.isNotEmpty()) return versionRuntime
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
-index cecd42b..9f2036e 100644
+index cecd42b3..0d4be28d 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
-@@ -347,9 +347,20 @@ abstract class Launcher(
+@@ -347,9 +347,18 @@ abstract class Launcher(
          args.purgeArg("-XX:ActiveProcessorCount")
  
          //Add automatically generated args
 -        val ramAllocationString = ramAllocation.toString()
 +        //Pocket Client: never fall back to the 256 MB minimum when nothing was set; pick a heap from device RAM
-+        val effectiveRam = if (AllSettings.ramAllocation.getValue() == null && ramAllocation <= 256) {
-+            com.movtery.zalithlauncher.pocket.PocketTuning.defaultRamMb(com.movtery.zalithlauncher.context.GlobalContext)
-+        } else ramAllocation
++        val effectiveRam = com.movtery.zalithlauncher.pocket.PocketTuning.effectiveHeapMb(ramAllocation)
 +        val ramAllocationString = effectiveRam.toString()
          args.add("-Xms${ramAllocationString}M")
          args.add("-Xmx${ramAllocationString}M")
-+        com.movtery.zalithlauncher.pocket.PocketTuning.addGcArgs(args)
++        com.movtery.zalithlauncher.pocket.PocketTuning.addGcArgs(args, effectiveRam)
 +        //Pocket Client: compact object headers (Java 25+): 8-byte instead of 12-byte object headers
 +        if (AllSettings.pcJava25CompactHeaders.getValue() && this::runtime.isInitialized && runtime.javaVersion >= 25 &&
 +            args.none { it.contains("CompactObjectHeaders") }
@@ -351,7 +361,7 @@ index cecd42b..9f2036e 100644
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 new file mode 100644
-index 0000000..94817a8
+index 00000000..94817a8a
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 @@ -0,0 +1,118 @@
@@ -475,10 +485,10 @@ index 0000000..94817a8
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt
 new file mode 100644
-index 0000000..f7b4741
+index 00000000..022c9aed
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,211 @@
 +package com.movtery.zalithlauncher.pocket
 +
 +import android.content.Context
@@ -503,12 +513,19 @@ index 0000000..f7b4741
 + * Pocket Client: records battery use while the game runs, into logs/battery_<time>.csv.
 + * The logs folder is what "share logs" zips, so the file reaches us with the other logs.
 + *
-+ * Every 30 s: battery %, current, voltage, power, temperature, thermal status and Java heap. At the end a
-+ * summary line: minutes played, % used, % per minute and average power.
++ * Every 30 s: battery %, current, voltage, power, temperature, thermal status, FPS (average and lowest second
++ * of those 30 s) and the game process' memory (RSS). At the end a summary line: minutes played, % used, % per
++ * minute, average power, average FPS and peak memory. The Java heap itself is in gc_<time>.log (same folder).
 + */
 +object PocketBatteryLog {
 +    private const val TAG = "PocketBatteryLog"
 +    private const val INTERVAL_MS = 30_000L
++    private const val FPS_INTERVAL_MS = 1_000L
++
++    /** Time stamp of the running session's files, shared with the GC log (PocketTuning.addGcLog). */
++    @Volatile
++    var stamp: String? = null
++        private set
 +
 +    private var thread: HandlerThread? = null
 +    private var handler: Handler? = null
@@ -518,6 +535,12 @@ index 0000000..f7b4741
 +    private var lastPercent = -1
 +    private var powerSumMw = 0.0
 +    private var samples = 0
++    private var fpsSum = 0L
++    private var fpsCount = 0
++    private var fpsMin = Int.MAX_VALUE
++    private var totalFpsSum = 0L
++    private var totalFpsCount = 0
++    private var peakRssMb = 0L
 +
 +    fun start(context: Context, title: String) {
 +        if (thread != null) return
@@ -527,6 +550,7 @@ index 0000000..f7b4741
 +                ?: File(app.getExternalFilesDir(null), "logs")
 +            dir.mkdirs()
 +            val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.ROOT).format(Date())
++            this.stamp = stamp
 +            val out = File(dir, "battery_$stamp.csv")
 +            out.writeText(
 +                "# Pocket Client battery log\n" +
@@ -535,7 +559,7 @@ index 0000000..f7b4741
 +                    "# settings: resolution=${AllSettings.resolutionRatio.getValue()}% surfaceView=${AllSettings.pcUseSurfaceView.getValue()} " +
 +                    "java25=${AllSettings.pcJava25CompactHeaders.getValue()} maxRefresh=${AllSettings.requestMaxRefreshRate.getValue()} " +
 +                    "sustained=${AllSettings.sustainedPerformance.getValue()}\n" +
-+                    "minute,battery_pct,current_ma,voltage_v,power_w,temp_c,thermal,charging,heap_used_mb\n"
++                    "minute,battery_pct,current_ma,voltage_v,power_w,temp_c,thermal,charging,fps_avg,fps_min,rss_mb\n"
 +            )
 +            file = out
 +            startTime = System.currentTimeMillis()
@@ -543,6 +567,12 @@ index 0000000..f7b4741
 +            lastPercent = -1
 +            powerSumMw = 0.0
 +            samples = 0
++            fpsSum = 0
++            fpsCount = 0
++            fpsMin = Int.MAX_VALUE
++            totalFpsSum = 0
++            totalFpsCount = 0
++            peakRssMb = 0
 +
 +            val t = HandlerThread("PocketBatteryLog").also { it.start() }
 +            thread = t
@@ -554,6 +584,13 @@ index 0000000..f7b4741
 +                    handler?.postDelayed(this, INTERVAL_MS)
 +                }
 +            })
++            //FPS is a per-second counter in the native bridge; read it every second and average per row
++            h.postDelayed(object : Runnable {
++                override fun run() {
++                    sampleFps()
++                    handler?.postDelayed(this, FPS_INTERVAL_MS)
++                }
++            }, FPS_INTERVAL_MS)
 +        } catch (e: Exception) {
 +            Log.w(TAG, "Could not start the battery log", e)
 +        }
@@ -568,6 +605,32 @@ index 0000000..f7b4741
 +        thread?.quitSafely()
 +        thread = null
 +        file = null
++        stamp = null
++    }
++
++    private fun sampleFps() {
++        val fps = try {
++            org.lwjgl.glfw.CallbackBridge.getCurrentFps()
++        } catch (e: Throwable) { //native library not loaded yet
++            return
++        }
++        //0 while the game is still loading (nothing drawn yet): not a frame rate
++        if (fps <= 0) return
++        fpsSum += fps
++        fpsCount++
++        if (fps < fpsMin) fpsMin = fps
++        totalFpsSum += fps
++        totalFpsCount++
++    }
++
++    /** Memory of the whole game process (Java heap, native, graphics buffers): what Android looks at before killing it. */
++    private fun rssMb(): Long = try {
++        File("/proc/self/status").useLines { lines ->
++            lines.firstOrNull { it.startsWith("VmRSS:") }
++                ?.split(Regex("\\s+"))?.getOrNull(1)?.toLongOrNull()?.div(1024) ?: -1L
++        }
++    } catch (e: Exception) {
++        -1L
 +    }
 +
 +    private fun sample(context: Context) {
@@ -589,8 +652,13 @@ index 0000000..f7b4741
 +                (context.getSystemService(Context.POWER_SERVICE) as PowerManager).currentThermalStatus
 +            } else -1
 +
-+            val rt = Runtime.getRuntime()
-+            val heapMb = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
++            val fpsAvg = if (fpsCount > 0) fpsSum.toDouble() / fpsCount else 0.0
++            val fpsLow = if (fpsCount > 0) fpsMin else 0
++            fpsSum = 0
++            fpsCount = 0
++            fpsMin = Int.MAX_VALUE
++            val rss = rssMb()
++            if (rss > peakRssMb) peakRssMb = rss
 +            val minute = (System.currentTimeMillis() - startTime) / 60000.0
 +
 +            if (startPercent < 0) startPercent = percent
@@ -602,8 +670,8 @@ index 0000000..f7b4741
 +
 +            out.appendText(
 +                String.format(
-+                    Locale.ROOT, "%.1f,%d,%.0f,%.2f,%.2f,%.1f,%d,%b,%d\n",
-+                    minute, percent, currentMa, voltage, powerW, temp, thermal, plugged, heapMb
++                    Locale.ROOT, "%.1f,%d,%.0f,%.2f,%.2f,%.1f,%d,%b,%.1f,%d,%d\n",
++                    minute, percent, currentMa, voltage, powerW, temp, thermal, plugged, fpsAvg, fpsLow, rss
 +                )
 +            )
 +        } catch (e: Exception) {
@@ -618,11 +686,13 @@ index 0000000..f7b4741
 +            val used = if (startPercent >= 0 && lastPercent >= 0) startPercent - lastPercent else 0
 +            val perMinute = if (minutes > 0) used / minutes else 0.0
 +            val avgW = if (samples > 0) powerSumMw / samples / 1000 else 0.0
++            val avgFps = if (totalFpsCount > 0) totalFpsSum.toDouble() / totalFpsCount else 0.0
 +            out.appendText(
 +                String.format(
 +                    Locale.ROOT,
-+                    "# summary: %.1f min, %d%% used (%d%% -> %d%%), %.2f %%/min, average %.2f W while unplugged\n",
-+                    minutes, used, startPercent, lastPercent, perMinute, avgW
++                    "# summary: %.1f min, %d%% used (%d%% -> %d%%), %.2f %%/min, average %.2f W while unplugged, " +
++                        "average %.1f FPS, peak memory %d MB\n",
++                    minutes, used, startPercent, lastPercent, perMinute, avgW, avgFps, peakRssMb
 +                )
 +            )
 +        } catch (e: Exception) {
@@ -632,7 +702,7 @@ index 0000000..f7b4741
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt
 new file mode 100644
-index 0000000..192bab1
+index 00000000..192bab14
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt
 @@ -0,0 +1,112 @@
@@ -750,10 +820,10 @@ index 0000000..192bab1
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
 new file mode 100644
-index 0000000..fb57973
+index 00000000..809a00df
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,203 @@
 +package com.movtery.zalithlauncher.pocket
 +
 +import android.app.ActivityManager
@@ -789,20 +859,50 @@ index 0000000..fb57973
 +        }
 +    }
 +
++    /** The heap the game really gets: [defaultRamMb] when the player never set one (see Launcher.progressFinalUserArgs). */
++    fun effectiveHeapMb(ramAllocation: Int): Int =
++        if (com.movtery.zalithlauncher.setting.AllSettings.ramAllocation.getValue() == null && ramAllocation <= 256) {
++            defaultRamMb(com.movtery.zalithlauncher.context.GlobalContext)
++        } else ramAllocation
++
 +    /**
 +     * G1 tuned for short pauses: most stutter (and wasted CPU, i.e. battery) in modded play comes from long
 +     * collections. Skipped when the player set their own GC flags.
 +     */
-+    fun addGcArgs(args: MutableList<String>) {
++    fun addGcArgs(args: MutableList<String>, heapMb: Int) {
 +        addThreadBudget(args)
 +        if (args.any { (it.startsWith("-XX:+Use") && it.endsWith("GC")) || it.startsWith("-XX:MaxGCPauseMillis") || it.startsWith("-XX:G1") }) return
++        val small = heapMb <= LOW_MEMORY_HEAP_MB
 +        args.add("-XX:+UseG1GC")
 +        args.add("-XX:+UnlockExperimentalVMOptions")
 +        args.add("-XX:MaxGCPauseMillis=40")
 +        args.add("-XX:G1NewSizePercent=20")
-+        args.add("-XX:G1ReservePercent=20")
++        //The reserve is heap G1 keeps empty for emergencies: 20% of 512 MB would be 100 MB the game can't use
++        args.add("-XX:G1ReservePercent=${if (small) 10 else 20}")
 +        args.add("-XX:+ParallelRefProcEnabled")
 +        args.add("-XX:+DisableExplicitGC")
++        if (small) {
++            //Mods and resource packs hold many copies of the same strings; G1 merges them in the background
++            args.add("-XX:+UseStringDeduplication")
++            //Give cached (softly referenced) data back as soon as the heap gets tight, instead of running out
++            args.add("-XX:SoftRefLRUPolicyMSPerMB=0")
++        }
++    }
++
++    /** Heap at or below this gets the low-memory treatment (GC flags above, capped options in [tuneOptions]). */
++    const val LOW_MEMORY_HEAP_MB = 1024
++
++    /**
++     * GC log for this session next to the battery log (logs/gc_<time>.log). One line per collection, so it is
++     * nearly free, and it shows how full the Java heap really gets: what we need to tune for small heaps.
++     * Java 9+ only (the -Xlog syntax).
++     */
++    fun addGcLog(args: MutableList<String>, javaVersion: Int) {
++        if (javaVersion < 9 || args.any { it.startsWith("-Xlog:gc") || it.startsWith("-Xloggc") }) return
++        val stamp = PocketBatteryLog.stamp ?: return
++        val dir = runCatching { com.movtery.zalithlauncher.path.PathManager.DIR_LAUNCHER_LOGS }.getOrNull() ?: return
++        //No ':' in Android app paths, which -Xlog uses as its separator
++        args.add("-Xlog:gc:file=${File(dir, "gc_$stamp.log").absolutePath}:uptime:filecount=0")
 +    }
 +
 +    /**
@@ -826,10 +926,13 @@ index 0000000..fb57973
 +     * Once per game directory: distances, FPS cap and cheap visual options that fit the phone.
 +     * 60 FPS instead of uncapped roughly halves GPU work. Anything the player changes later is kept.
 +     */
-+    fun tuneOptions(context: Context, gameDir: File) {
++    fun tuneOptions(context: Context, gameDir: File, heapMb: Int) {
 +        try {
 +            val marker = File(gameDir, MARKER)
-+            if (marker.exists()) return
++            if (marker.exists()) {
++                capForSmallHeap(gameDir, heapMb)
++                return
++            }
 +            val ram = totalRamMb(context)
 +            val tier = when {
 +                ram < 4096 -> listOf("renderDistance" to "4", "simulationDistance" to "4", "maxFps" to "40", "particles" to "2")
@@ -847,21 +950,69 @@ index 0000000..fb57973
 +            )
 +
 +            val file = File(gameDir, "options.txt")
-+            val options = LinkedHashMap<String, String>()
-+            if (file.isFile) {
-+                file.readLines().forEach { line ->
-+                    val i = line.indexOf(':')
-+                    if (i > 0) options[line.substring(0, i)] = line.substring(i + 1)
-+                }
-+            }
++            val options = readOptions(file)
 +            (tier + cheap).forEach { (k, v) -> options[k] = v }
-+            gameDir.mkdirs()
-+            file.writeText(options.entries.joinToString("\n") { "${it.key}:${it.value}" } + "\n")
++            writeOptions(file, options)
 +            marker.createNewFile()
 +            Log.i(TAG, "Tuned options for $ram MB RAM: $tier")
++            //The once-only defaults above may be higher than a small heap can hold
++            capForSmallHeap(gameDir, heapMb)
 +        } catch (e: Exception) {
 +            Log.w(TAG, "Could not tune options", e)
 +        }
++    }
++
++    /**
++     * Every launch, when the Java heap is small (around 512 MB): lower the options that fill the heap, so the game
++     * doesn't run out of memory and crash. Loaded chunks grow with the square of the render distance, so it is
++     * the big one. Only lowers values; a bigger heap leaves the player's settings alone.
++     */
++    private fun capForSmallHeap(gameDir: File, heapMb: Int) {
++        if (heapMb > LOW_MEMORY_HEAP_MB) return
++        val file = File(gameDir, "options.txt")
++        val options = readOptions(file)
++        val maxDistance = when {
++            heapMb <= 640 -> 3
++            heapMb <= 768 -> 4
++            else -> 6
++        }
++        var changed = false
++        fun capInt(key: String, max: Int) {
++            val now = options[key]?.trim()?.toIntOrNull()
++            if (now == null || now > max) {
++                options[key] = max.toString()
++                changed = true
++            }
++        }
++        capInt("renderDistance", maxDistance)
++        capInt("simulationDistance", 5) //5 is the lowest the game allows
++        capInt("mipmapLevels", 0)
++        capInt("biomeBlendRadius", 0)
++        val scaling = options["entityDistanceScaling"]?.trim()?.toDoubleOrNull()
++        if (scaling == null || scaling > 0.5) {
++            options["entityDistanceScaling"] = "0.5"
++            changed = true
++        }
++        if (changed) {
++            writeOptions(file, options)
++            Log.i(TAG, "Capped options for a $heapMb MB heap: render distance $maxDistance")
++        }
++    }
++
++    private fun readOptions(file: File): LinkedHashMap<String, String> {
++        val options = LinkedHashMap<String, String>()
++        if (file.isFile) {
++            file.readLines().forEach { line ->
++                val i = line.indexOf(':')
++                if (i > 0) options[line.substring(0, i)] = line.substring(i + 1)
++            }
++        }
++        return options
++    }
++
++    private fun writeOptions(file: File, options: Map<String, String>) {
++        file.parentFile?.mkdirs()
++        file.writeText(options.entries.joinToString("\n") { "${it.key}:${it.value}" } + "\n")
 +    }
 +
 +    /**
@@ -878,7 +1029,7 @@ index 0000000..fb57973
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 new file mode 100644
-index 0000000..a48bc1a
+index 00000000..a48bc1a6
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 @@ -0,0 +1,217 @@
@@ -1100,7 +1251,7 @@ index 0000000..a48bc1a
 +        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index e31d4e4..eedd6c4 100644
+index e31d4e45..eedd6c4a 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 @@ -67,7 +67,7 @@ object AllSettings : SettingsRegistry() {
@@ -1134,7 +1285,7 @@ index e31d4e4..eedd6c4 100644
      /**
       * 使用系统的 Vulkan 驱动
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
-index 517ae8e..1b7399b 100644
+index 517ae8e8..1b7399bd 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 @@ -217,9 +217,8 @@ class MainActivity : BaseAppCompatActivity() {
@@ -1169,7 +1320,7 @@ index 517ae8e..1b7399b 100644
              try {
                  val success = launcherUpgradeViewModel.checkManually(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
-index 7c61ffd..006081b 100644
+index 7c61ffd3..006081be 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 @@ -199,6 +199,9 @@ class VMViewModel : ViewModel() {
@@ -1352,7 +1503,7 @@ index 7c61ffd..006081b 100644
              )
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-index 1762895..b3b6428 100644
+index 1762895f..b3b6428c 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 @@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Row
@@ -1423,7 +1574,7 @@ index 1762895..b3b6428 100644
      }
  }
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
-index 4f13ce7..d825610 100644
+index 4f13ce72..d825610d 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
 @@ -315,6 +315,22 @@ fun RendererSettingsScreen(
@@ -1450,7 +1601,7 @@ index 4f13ce7..d825610 100644
                          modifier = Modifier.fillMaxWidth(),
                          position = CardPosition.Middle,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
-index 798967a..660ae18 100644
+index 798967a3..660ae18a 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 @@ -92,7 +92,8 @@ private fun TopBar(
@@ -1464,7 +1615,7 @@ index 798967a..660ae18 100644
          }
      }
 diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
-index 7ad1ae1..db07f15 100644
+index 7ad1ae13..db07f150 100644
 --- a/ZalithLauncher/src/main/res/values/strings.xml
 +++ b/ZalithLauncher/src/main/res/values/strings.xml
 @@ -1732,6 +1732,10 @@
