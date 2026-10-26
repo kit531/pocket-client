@@ -73,6 +73,43 @@ index 8b715c9..c4e3674 100644
          <activity
              android:name=".ui.activities.ControlEditorActivity"
              android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
+index edc9af2..78f3e1a 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
+@@ -125,11 +125,21 @@ fun microsoftLogin(
+                 androidText(R.string.account_microsoft_coped_device_code, deviceCode.userCode),
+                 Toast.LENGTH_SHORT
+             )
+-            toWeb(deviceCode.verificationUrl)
++            //Pocket Client: open the sign-in page in the phone's own browser. Microsoft sometimes inserts extra
++            //pages (terms of use, security checks) that the in-app web view does not show properly.
++            //The code is already on the clipboard; the in-app page is only a fallback.
++            val openedInBrowser = runCatching {
++                context.startActivity(
++                    android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(deviceCode.verificationUrl))
++                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
++                )
++            }.isSuccess
++            if (!openedInBrowser) toWeb(deviceCode.verificationUrl)
+             task.updateProgress(-1f)
+             task.updateMessage(androidText(R.string.account_microsoft_get_token, deviceCode.userCode))
+             val tokenResponse = getTokenResponse(deviceCode, coroutineContext) { time ->
+-                (!checkIfInWebScreen()).also { exit ->
++                //Pocket Client: in the external browser there is no in-app page to leave, keep polling
++                openedInBrowser.not() && (!checkIfInWebScreen()).also { exit ->
+                     if (exit && time > 0) {
+                         //如果已退出网页，则视为用户想要退出登录
+                         //弹出提示
+@@ -141,7 +151,7 @@ fun microsoftLogin(
+                     }
+                 }
+             }
+-            backToMain()
++            if (!openedInBrowser) backToMain()
+             val account = microsoftAuth(
+                 AuthType.Access,
+                 tokenResponse.refreshToken,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 index da9fa2a..fa2a80b 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
