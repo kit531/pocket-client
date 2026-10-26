@@ -579,7 +579,7 @@ index 517ae8e..5a0433d 100644
              try {
                  val success = launcherUpgradeViewModel.checkManually(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-index 1762895..dc63e11 100644
+index 1762895..b3b6428 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 @@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Row
@@ -590,10 +590,12 @@ index 1762895..dc63e11 100644
  import androidx.compose.foundation.layout.offset
  import androidx.compose.foundation.layout.padding
  import androidx.compose.foundation.layout.size
-@@ -185,6 +186,48 @@ fun LauncherScreen(
+@@ -185,6 +186,50 @@ fun LauncherScreen(
                  }
              }
  
++            //read here: BoxWithConstraints' maxHeight is not reachable inside the Column scope below
++            val portraitMenuHeight = minOf(maxHeight * 0.4f, 320.dp)
 +            if (maxHeight > maxWidth) {
 +                //Pocket Client: portrait home screen. Cards on top, the action menu (account, version,
 +                //launch) docked full-width at the bottom instead of a narrow side column.
@@ -621,7 +623,7 @@ index 1762895..dc63e11 100644
 +                        ActionMenu(
 +                            modifier = Modifier
 +                                .fillMaxWidth()
-+                                .height(minOf(maxHeight * 0.4f, 320.dp))
++                                .height(portraitMenuHeight)
 +                                .padding(ActionMenuOuterPadding),
 +                            isVisible = isVisible,
 +                            isTaller = false,
@@ -639,7 +641,7 @@ index 1762895..dc63e11 100644
              // 内容区域
              Row(modifier = Modifier.fillMaxSize()) {
                  // ActionMenu 对接到了 Start，留出空位
-@@ -251,6 +294,7 @@ fun LauncherScreen(
+@@ -251,6 +296,7 @@ fun LauncherScreen(
                      )
                  }
              }
