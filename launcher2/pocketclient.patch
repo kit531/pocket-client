@@ -1387,8 +1387,40 @@ index 7c61ffd3..006081be 100644
                  }
              )
  
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
+index 8ba528f2..5d68f254 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
+@@ -137,7 +137,9 @@ enum class FirstLoginMenu {
+     /** 打开微软登录菜单 */
+     MICROSOFT,
+     /** 打开总登录菜单 */
+-    NORMAL
++    NORMAL,
++    /** Pocket Client: open the change skin dialog of the current account (from the home screen) */
++    CHANGE_SKIN
+ }
+ 
+ /**
+@@ -192,6 +194,16 @@ fun AccountManageScreen(
+             FirstLoginMenu.NORMAL -> {
+                 actions.onIntent(AccountManageIntent.UpdateLoginMenuOp(LoginMenuOperation.Login))
+             }
++            FirstLoginMenu.CHANGE_SKIN -> {
++                //same rule as the account list: third-party auth servers manage skins themselves
++                AccountsManager.currentAccountFlow.value
++                    ?.takeIf { !it.isAuthServerAccount() }
++                    ?.let { account ->
++                        actions.onIntent(
++                            AccountManageIntent.UpdateAccountSkinOp(AccountSkinOperation.ChangeSkin(account))
++                        )
++                    }
++            }
+         }
+ 
+         viewModel.effect.collect { effect ->
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-index 1762895f..2fe30927 100644
+index 1762895f..31c69c15 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 @@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.Column
@@ -1402,7 +1434,38 @@ index 1762895f..2fe30927 100644
  import androidx.compose.foundation.layout.offset
  import androidx.compose.foundation.layout.padding
  import androidx.compose.foundation.layout.size
-@@ -128,8 +130,7 @@ fun LauncherScreen(
+@@ -42,6 +44,7 @@ import androidx.compose.material3.Icon
+ import androidx.compose.material3.IconButton
+ import androidx.compose.material3.LoadingIndicator
+ import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.FilledTonalButton
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.CompositionLocalProvider
+@@ -49,6 +52,7 @@ import androidx.compose.runtime.LaunchedEffect
+ import androidx.compose.runtime.getValue
+ import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.produceState
++import androidx.compose.runtime.key
+ import androidx.compose.runtime.remember
+ import androidx.compose.runtime.setValue
+ import androidx.compose.ui.Alignment
+@@ -76,12 +80,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
+ import com.movtery.cardgrid.state.rememberCardGridState
+ import com.movtery.guide.GuideSide
+ import com.movtery.guide.guideNode
++import com.movtery.petlib.ArmModel
+ import com.movtery.petlib.PetAnimation
+ import com.movtery.petlib.PetTapReaction
+ import com.movtery.zalithlauncher.R
+ import com.movtery.zalithlauncher.game.account.Account
+ import com.movtery.zalithlauncher.game.account.AccountsManager
+ import com.movtery.zalithlauncher.game.account.getAccountTypeName
++import com.movtery.zalithlauncher.game.account.wardrobe.isSlimModel
+ import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
+ import com.movtery.zalithlauncher.game.version.installed.Version
+ import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+@@ -128,8 +134,7 @@ fun LauncherScreen(
      startGuideOnce: (GuideKeys.Keys) -> Unit,
  ) {
      LaunchedEffect(Unit) {
@@ -1412,7 +1475,19 @@ index 1762895f..2fe30927 100644
      }
  
      BaseScreen(
-@@ -185,72 +186,16 @@ fun LauncherScreen(
+@@ -173,6 +178,11 @@ fun LauncherScreen(
+                     screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE)
+                 )
+             }
++            val toChangeSkin: () -> Unit = {
++                backStackViewModel.mainScreen.navigateTo(
++                    screenKey = NormalNavKey.AccountManager(FirstLoginMenu.CHANGE_SKIN)
++                )
++            }
+             val toVersionManageScreen: () -> Unit = {
+                 backStackViewModel.mainScreen.removeAndNavigateTo(
+                     remove = NestedNavKey.VersionSettings::class,
+@@ -185,72 +195,17 @@ fun LauncherScreen(
                  }
              }
  
@@ -1489,13 +1564,14 @@ index 1762895f..2fe30927 100644
 +                isVisible = isVisible,
 +                onLaunchGame = onLaunchGame,
 +                toAccountManageScreen = toAccountManageScreen,
++                toChangeSkin = toChangeSkin,
 +                toVersionManageScreen = toVersionManageScreen,
 +                toVersionSettingsScreen = toVersionSettingsScreen
 +            )
          }
      }
  }
-@@ -484,13 +429,17 @@ private fun VersionsContent(
+@@ -484,13 +439,17 @@ private fun VersionsContent(
              modifier = Modifier
                  .fillMaxWidth()
                  .padding(PaddingValues(horizontal = 12.dp))
@@ -1515,7 +1591,7 @@ index 1762895f..2fe30927 100644
              }
          )
      }
-@@ -754,3 +703,118 @@ private fun VersionManagerLayout(
+@@ -754,3 +713,143 @@ private fun VersionManagerLayout(
          }
      }
  }
@@ -1530,6 +1606,7 @@ index 1762895f..2fe30927 100644
 +    isVisible: Boolean,
 +    onLaunchGame: (Version?) -> Unit,
 +    toAccountManageScreen: () -> Unit,
++    toChangeSkin: () -> Unit,
 +    toVersionManageScreen: () -> Unit,
 +    toVersionSettingsScreen: () -> Unit,
 +) {
@@ -1582,7 +1659,8 @@ index 1762895f..2fe30927 100644
 +                modifier = Modifier
 +                    .weight(1f)
 +                    .fillMaxWidth(),
-+                account = account
++                account = account,
++                onChangeSkin = toChangeSkin
 +            )
 +            cards(Modifier.fillMaxWidth())
 +        }
@@ -1595,7 +1673,8 @@ index 1762895f..2fe30927 100644
 +                modifier = Modifier
 +                    .weight(1f)
 +                    .fillMaxHeight(),
-+                account = account
++                account = account,
++                onChangeSkin = toChangeSkin
 +            )
 +            cards(
 +                Modifier
@@ -1610,9 +1689,9 @@ index 1762895f..2fe30927 100644
 +private fun PocketSkin(
 +    modifier: Modifier = Modifier,
 +    account: Account?,
++    onChangeSkin: () -> Unit,
 +) {
 +    val refreshWardrobe by AccountsManager.refreshWardrobe.collectAsStateWithLifecycle()
-+    val armModel = account?.skinModelType?.toArmModel()
 +    val skinStamp = account?.getSkinFile()?.lastModified()
 +    val capeStamp = account?.getCapeFile()?.lastModified()
 +    val skinBytes by produceState<ByteArray?>(null, account, refreshWardrobe, skinStamp) {
@@ -1623,16 +1702,38 @@ index 1762895f..2fe30927 100644
 +        value = account?.getCapeFile()?.takeIf { it.exists() }
 +            ?.inputStream()?.use { it.readBytes() }
 +    }
++    //the arm model is read from the skin picture when the account does not know it (offline accounts
++    //and imported skins), so slim (Alex) and wide (Steve) skins both show correctly
++    val armModel by produceState<ArmModel?>(null, account, refreshWardrobe, skinStamp) {
++        value = account?.skinModelType?.toArmModel()
++            ?: account?.getSkinFile()?.takeIf { it.exists() }?.let { file ->
++                if (file.isSlimModel()) ArmModel.Slim else ArmModel.Classic
++            }
++    }
 +
-+    PetModelView(
++    Column(
 +        modifier = modifier,
-+        skin = skinBytes,
-+        cape = capeBytes,
-+        arm = armModel,
-+        animation = PetAnimation.Idle,
-+        tapReaction = PetTapReaction.Interact,
-+        dragYaw = true
-+    )
++        horizontalAlignment = Alignment.CenterHorizontally,
++        verticalArrangement = Arrangement.spacedBy(8.dp)
++    ) {
++        //keyed on the picture, so the model is rebuilt when the skin or the arm type changes
++        key(skinBytes?.contentHashCode(), armModel) {
++            PetModelView(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxWidth(),
++                skin = skinBytes,
++                cape = capeBytes,
++                arm = armModel,
++                animation = PetAnimation.Idle,
++                tapReaction = PetTapReaction.Interact,
++                dragYaw = true
++            )
++        }
++        FilledTonalButton(onClick = onChangeSkin) {
++            Text(stringResource(R.string.pocket_change_skin))
++        }
++    }
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
 index 1fb77115..ed5a19af 100644
@@ -1781,18 +1882,19 @@ index 605edede..5dac14de 100644
                      color = customColor,
                      style = customPaletteStyle
 diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
-index 7ad1ae13..a7f902e4 100644
+index 7ad1ae13..64fb8828 100644
 --- a/ZalithLauncher/src/main/res/values/strings.xml
 +++ b/ZalithLauncher/src/main/res/values/strings.xml
-@@ -136,6 +136,7 @@
+@@ -136,6 +136,8 @@
      <string name="theme_color_urban_ash">Urban Ash</string>
      <!-- Option of the theme color setting in launcher settings -->
      <string name="theme_color_verdant_dawn">Silent Forest Dawn</string>
 +    <string name="theme_color_pocket_green">Pocket Green</string>
++    <string name="pocket_change_skin">Change skin</string>
      <!-- Title of the color picker dialog -->
      <string name="theme_color_picker_title">Color Picker</string>
      <!-- Button in the color picker dialog to edit the color as a hex code -->
-@@ -1732,6 +1733,10 @@
+@@ -1732,6 +1734,10 @@
      <!-- Summary of the game fullscreen switch in the Renderer settings tab -->
      <string name="settings_renderer_full_screen_summary">Enable fullscreen mode, ignoring safe areas like notches and punch-holes</string>
      <!-- Switch title in the Renderer settings tab to enable the sustained performance mode -->
