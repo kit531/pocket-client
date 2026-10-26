@@ -148,7 +148,7 @@ index edc9af2..254d261 100644
                  AuthType.Access,
                  tokenResponse.refreshToken,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
-index da9fa2a..b30e9c7 100644
+index da9fa2a..bcf2ed9 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 @@ -86,6 +86,38 @@ private const val TENANT = "/consumers"
@@ -253,6 +253,29 @@ index da9fa2a..b30e9c7 100644
                  },
                  context = context
              )
+@@ -318,6 +363,22 @@ private suspend fun authenticateXBL(accessToken: String, update: (AsyncStatus) -
+         return Pair(response["Token"].text(), uhs)
+     }
+ 
++    //Pocket Client: login.live.com (MBI_SSL) tokens go to Xbox Live as-is, without "d=" (as in Pocket Client 1).
++    //With the prefix XBL answers 401. Fall back to the prefixed form if the raw ticket is rejected.
++    if (useLiveLogin) {
++        return withRetry {
++            try {
++                requestXblToken(accessToken)
++            } catch (e: ClientRequestException) {
++                val status = e.response.status.value
++                if (status == 400 || status == 401) {
++                    Logger.warning(TAG, "XBL rejected the raw RpsTicket ($status), retrying with the d= prefix")
++                    requestXblToken("d=$accessToken")
++                } else throw e
++            }
++        }
++    }
++
+     return withRetry {
+         try {
+             requestXblToken("d=$accessToken")
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 index f1a7854..9acf1cc 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
