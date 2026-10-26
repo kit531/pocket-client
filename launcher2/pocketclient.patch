@@ -564,10 +564,10 @@ index 0000000..192bab1
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
 new file mode 100644
-index 0000000..3a00ffd
+index 0000000..fb57973
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,122 @@
 +package com.movtery.zalithlauncher.pocket
 +
 +import android.app.ActivityManager
@@ -608,6 +608,7 @@ index 0000000..3a00ffd
 +     * collections. Skipped when the player set their own GC flags.
 +     */
 +    fun addGcArgs(args: MutableList<String>) {
++        addThreadBudget(args)
 +        if (args.any { (it.startsWith("-XX:+Use") && it.endsWith("GC")) || it.startsWith("-XX:MaxGCPauseMillis") || it.startsWith("-XX:G1") }) return
 +        args.add("-XX:+UseG1GC")
 +        args.add("-XX:+UnlockExperimentalVMOptions")
@@ -616,6 +617,23 @@ index 0000000..3a00ffd
 +        args.add("-XX:G1ReservePercent=20")
 +        args.add("-XX:+ParallelRefProcEnabled")
 +        args.add("-XX:+DisableExplicitGC")
++    }
++
++    /**
++     * A desktop JVM and Minecraft size their thread pools to "all cores": world/chunk workers, GC workers and
++     * JIT compilers all wake up together and keep every big core at high clocks. On a phone that is heat and
++     * battery for little gain. Cap the background pools so the render thread keeps a core to itself and the
++     * rest can idle. Each flag is skipped if the player set it.
++     */
++    private fun addThreadBudget(args: MutableList<String>) {
++        val cores = Runtime.getRuntime().availableProcessors()
++        fun addIfMissing(prefix: String, arg: String) {
++            if (args.none { it.startsWith(prefix) }) args.add(arg)
++        }
++        addIfMissing("-Dmax.bg.threads", "-Dmax.bg.threads=${maxOf(2, cores / 2 - 1)}") //Minecraft worker pool
++        addIfMissing("-XX:ParallelGCThreads", "-XX:ParallelGCThreads=${maxOf(2, cores / 3)}")
++        addIfMissing("-XX:ConcGCThreads", "-XX:ConcGCThreads=1")
++        addIfMissing("-XX:CICompilerCount", "-XX:CICompilerCount=${if (cores >= 8) 3 else 2}")
 +    }
 +
 +    /**
