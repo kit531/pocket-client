@@ -288,6 +288,38 @@ index f1a7854..9acf1cc 100644
 +    val message: String = "" //Pocket Client: login.live.com does not send a message
  )
 \ No newline at end of file
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
+index cdf896c..728c95f 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
+@@ -236,6 +236,7 @@ class GameLauncher(
+         val gameDirPath = version.getGameDir()
+ 
+         disableSplash(gameDirPath)
++        com.movtery.zalithlauncher.pocket.PocketTuning.tuneOptions(activity, gameDirPath) //Pocket Client
+ 
+         if (version.getVersionInfo()?.hasLoader(ModLoader.NEOFORGE) == true) {
+             // 关闭NeoForge 12早期加载屏动画
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
+index cecd42b..92ab489 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
+@@ -347,9 +347,14 @@ abstract class Launcher(
+         args.purgeArg("-XX:ActiveProcessorCount")
+ 
+         //Add automatically generated args
+-        val ramAllocationString = ramAllocation.toString()
++        //Pocket Client: never fall back to the 256 MB minimum when nothing was set; pick a heap from device RAM
++        val effectiveRam = if (AllSettings.ramAllocation.getValue() == null && ramAllocation <= 256) {
++            com.movtery.zalithlauncher.pocket.PocketTuning.defaultRamMb(com.movtery.zalithlauncher.context.GlobalContext)
++        } else ramAllocation
++        val ramAllocationString = effectiveRam.toString()
+         args.add("-Xms${ramAllocationString}M")
+         args.add("-Xmx${ramAllocationString}M")
++        com.movtery.zalithlauncher.pocket.PocketTuning.addGcArgs(args)
+ 
+         args.add("-Dorg.lwjgl.openal.libname=${PathManager.DIR_NATIVE_LIB}/libopenal.so")
+ 
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 new file mode 100644
 index 0000000..94817a8
@@ -530,6 +562,116 @@ index 0000000..192bab1
 +        super.onDestroy()
 +    }
 +}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
+new file mode 100644
+index 0000000..3a00ffd
+--- /dev/null
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
+@@ -0,0 +1,104 @@
++package com.movtery.zalithlauncher.pocket
++
++import android.app.ActivityManager
++import android.content.Context
++import android.os.Handler
++import android.os.Looper
++import android.os.Process
++import android.util.Log
++import java.io.File
++
++/**
++ * Pocket Client: battery and smoothness defaults for phones.
++ */
++object PocketTuning {
++    private const val TAG = "PocketTuning"
++    private const val MARKER = ".pocketclient-tuned"
++
++    fun totalRamMb(context: Context): Long {
++        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
++        val info = ActivityManager.MemoryInfo()
++        am.getMemoryInfo(info)
++        return info.totalMem / (1024 * 1024)
++    }
++
++    /** Java heap when the player never set one. Upstream would fall back to the 256 MB minimum. */
++    fun defaultRamMb(context: Context): Int {
++        val total = totalRamMb(context)
++        return when {
++            total >= 7168 -> 3072
++            total >= 5120 -> 2048
++            total >= 3584 -> 1536
++            else -> 1024
++        }
++    }
++
++    /**
++     * G1 tuned for short pauses: most stutter (and wasted CPU, i.e. battery) in modded play comes from long
++     * collections. Skipped when the player set their own GC flags.
++     */
++    fun addGcArgs(args: MutableList<String>) {
++        if (args.any { (it.startsWith("-XX:+Use") && it.endsWith("GC")) || it.startsWith("-XX:MaxGCPauseMillis") || it.startsWith("-XX:G1") }) return
++        args.add("-XX:+UseG1GC")
++        args.add("-XX:+UnlockExperimentalVMOptions")
++        args.add("-XX:MaxGCPauseMillis=40")
++        args.add("-XX:G1NewSizePercent=20")
++        args.add("-XX:G1ReservePercent=20")
++        args.add("-XX:+ParallelRefProcEnabled")
++        args.add("-XX:+DisableExplicitGC")
++    }
++
++    /**
++     * Once per game directory: distances, FPS cap and cheap visual options that fit the phone.
++     * 60 FPS instead of uncapped roughly halves GPU work. Anything the player changes later is kept.
++     */
++    fun tuneOptions(context: Context, gameDir: File) {
++        try {
++            val marker = File(gameDir, MARKER)
++            if (marker.exists()) return
++            val ram = totalRamMb(context)
++            val tier = when {
++                ram < 4096 -> listOf("renderDistance" to "4", "simulationDistance" to "4", "maxFps" to "40", "particles" to "2")
++                ram < 8192 -> listOf("renderDistance" to "6", "simulationDistance" to "5", "maxFps" to "60", "particles" to "1")
++                else -> listOf("renderDistance" to "8", "simulationDistance" to "6", "maxFps" to "60", "particles" to "1")
++            }
++            val cheap = listOf(
++                "enableVsync" to "false",
++                "graphicsMode" to "0",
++                "renderClouds" to "\"false\"",
++                "entityShadows" to "false",
++                "biomeBlendRadius" to "0",
++                "mipmapLevels" to "0",
++                "entityDistanceScaling" to "0.75"
++            )
++
++            val file = File(gameDir, "options.txt")
++            val options = LinkedHashMap<String, String>()
++            if (file.isFile) {
++                file.readLines().forEach { line ->
++                    val i = line.indexOf(':')
++                    if (i > 0) options[line.substring(0, i)] = line.substring(i + 1)
++                }
++            }
++            (tier + cheap).forEach { (k, v) -> options[k] = v }
++            gameDir.mkdirs()
++            file.writeText(options.entries.joinToString("\n") { "${it.key}:${it.value}" } + "\n")
++            marker.createNewFile()
++            Log.i(TAG, "Tuned options for $ram MB RAM: $tier")
++        } catch (e: Exception) {
++            Log.w(TAG, "Could not tune options", e)
++        }
++    }
++
++    /**
++     * The game runs in its own process (":game"). Once it has started, the launcher's process is not needed:
++     * end it so none of its threads, services or UI keep using CPU and memory while playing.
++     * When the game exits, the launcher is restarted (upstream already does this).
++     */
++    fun endLauncherProcessSoon() {
++        Handler(Looper.getMainLooper()).postDelayed({
++            Log.i(TAG, "Game started, ending the launcher process")
++            Process.killProcess(Process.myPid())
++        }, 3000)
++    }
++}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 new file mode 100644
 index 0000000..a48bc1a
@@ -753,8 +895,36 @@ index 0000000..a48bc1a
 +    private fun toast(activity: AppCompatActivity, text: String) =
 +        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
 +}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
+index e31d4e4..3377dae 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
+@@ -67,7 +67,7 @@ object AllSettings : SettingsRegistry() {
+     /**
+      * 分辨率
+      */
+-    val resolutionRatio = intSetting("resolutionRatio", 100, 25..300)
++    val resolutionRatio = intSetting("resolutionRatio", 80, 25..300) //Pocket Client: 80% looks the same on a phone and saves GPU/battery
+ 
+     /**
+      * 分辨率规则
+@@ -92,12 +92,12 @@ object AllSettings : SettingsRegistry() {
+     /**
+      * 持续性能模式
+      */
+-    val sustainedPerformance = boolSetting("sustainedPerformance", false)
++    val sustainedPerformance = boolSetting("sustainedPerformance", true) //Pocket Client: avoid heat spikes and throttling
+ 
+     /**
+      * 游戏运行时请求系统切换到同分辨率最高刷新率档位（关闭则回落系统自适应刷新）
+      */
+-    val requestMaxRefreshRate = boolSetting("requestMaxRefreshRate", true)
++    val requestMaxRefreshRate = boolSetting("requestMaxRefreshRate", false) //Pocket Client: forcing 120 Hz costs a lot of battery
+ 
+     /**
+      * 使用系统的 Vulkan 驱动
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
-index 517ae8e..5a0433d 100644
+index 517ae8e..1b7399b 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 @@ -217,9 +217,8 @@ class MainActivity : BaseAppCompatActivity() {
@@ -769,7 +939,16 @@ index 517ae8e..5a0433d 100644
          }
  
          //错误信息展示
-@@ -572,6 +571,9 @@ class MainActivity : BaseAppCompatActivity() {
+@@ -352,6 +351,8 @@ class MainActivity : BaseAppCompatActivity() {
+                         launchGameViewModel = launchGameViewModel,
+                         exitActivity = {
+                             this@MainActivity.finish()
++                            //Pocket Client: the game has its own process; end the launcher's while playing
++                            com.movtery.zalithlauncher.pocket.PocketTuning.endLauncherProcessSoon()
+                         },
+                         ensureVulkanSupported = vulkanCheckerViewModel::ensureSupported,
+                         submitError = {
+@@ -572,6 +573,9 @@ class MainActivity : BaseAppCompatActivity() {
       * 检查启动器更新
       */
      private fun checkUpdate() {
@@ -779,6 +958,22 @@ index 517ae8e..5a0433d 100644
          lifecycleScope.launch(Dispatchers.IO) {
              try {
                  val success = launcherUpgradeViewModel.checkManually(
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
+index 7c61ffd..10e5e24 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
+@@ -764,6 +764,11 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+             requestedRefreshRate = 0f
+             setPreferredDisplayModeId(0)
+             clearSurfaceFrameRate()
++            //Pocket Client: ask for 60 Hz. The game is capped at 60 FPS, and a 120 Hz panel refreshing
++            //twice per frame only burns battery.
++            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
++                gameSurface?.setFrameRate(60f, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE, Surface.CHANGE_FRAME_RATE_ALWAYS)
++            }
+             return
+         }
+         val best = maxRefreshRateMode(display)
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 index 1762895..b3b6428 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
