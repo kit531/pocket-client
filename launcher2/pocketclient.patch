@@ -1,5 +1,5 @@
 diff --git a/ZalithLauncher/build.gradle.kts b/ZalithLauncher/build.gradle.kts
-index ada8a5d..c268538 100644
+index ada8a5d1..c268538f 100644
 --- a/ZalithLauncher/build.gradle.kts
 +++ b/ZalithLauncher/build.gradle.kts
 @@ -56,16 +56,17 @@ android {
@@ -27,7 +27,7 @@ index ada8a5d..c268538 100644
          targetSdk = 34
          versionCode = launcherVersionCode
 diff --git a/ZalithLauncher/gradle.properties b/ZalithLauncher/gradle.properties
-index b0f3e16..90d5ed1 100644
+index b0f3e16c..90d5ed17 100644
 --- a/ZalithLauncher/gradle.properties
 +++ b/ZalithLauncher/gradle.properties
 @@ -1,8 +1,8 @@
@@ -44,7 +44,7 @@ index b0f3e16..90d5ed1 100644
  # your OAuth client id
  #oauth_client_id=xxx
 diff --git a/ZalithLauncher/src/main/AndroidManifest.xml b/ZalithLauncher/src/main/AndroidManifest.xml
-index 8b715c9..20b7724 100644
+index 8b715c9c..20b7724f 100644
 --- a/ZalithLauncher/src/main/AndroidManifest.xml
 +++ b/ZalithLauncher/src/main/AndroidManifest.xml
 @@ -8,6 +8,7 @@
@@ -86,7 +86,7 @@ index 8b715c9..20b7724 100644
              android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
              android:screenOrientation="sensorLandscape" />
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
-index edc9af2..254d261 100644
+index edc9af29..254d2618 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
 @@ -37,6 +37,8 @@ import com.movtery.zalithlauncher.game.account.microsoft.NotPurchasedMinecraftEx
@@ -148,7 +148,7 @@ index edc9af2..254d261 100644
                  AuthType.Access,
                  tokenResponse.refreshToken,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
-index da9fa2a..bcf2ed9 100644
+index da9fa2ab..bcf2ed91 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 @@ -86,6 +86,38 @@ private const val TENANT = "/consumers"
@@ -277,7 +277,7 @@ index da9fa2a..bcf2ed9 100644
          try {
              requestXblToken("d=$accessToken")
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
-index f1a7854..9acf1cc 100644
+index f1a78543..9acf1cc6 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 @@ -34,5 +34,5 @@ data class DeviceCodeResponse(
@@ -289,18 +289,30 @@ index f1a7854..9acf1cc 100644
  )
 \ No newline at end of file
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
-index cdf896c..0a8ed22 100644
+index cdf896c9..eb20f610 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
-@@ -236,6 +236,7 @@ class GameLauncher(
+@@ -220,6 +220,8 @@ class GameLauncher(
+ 
+     override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
+         super.progressFinalUserArgs(args, version.getRamAllocation(activity))
++        //Pocket Client: GC log next to the battery log (game only, not installers)
++        runCatching { runtime.javaVersion }.getOrNull()?.let { com.movtery.zalithlauncher.pocket.PocketTuning.addGcLog(args, it) }
+         if (Renderers.isCurrentRendererValid()) {
+             args.add("-Dorg.lwjgl.opengl.libname=${getRendererLibrary()}")
+         }
+@@ -236,6 +238,10 @@ class GameLauncher(
          val gameDirPath = version.getGameDir()
  
          disableSplash(gameDirPath)
-+        com.movtery.zalithlauncher.pocket.PocketTuning.tuneOptions(activity, gameDirPath) //Pocket Client
++        com.movtery.zalithlauncher.pocket.PocketTuning.tuneOptions(
++            activity, gameDirPath,
++            com.movtery.zalithlauncher.pocket.PocketTuning.effectiveHeapMb(version.getRamAllocation(activity))
++        ) //Pocket Client
  
          if (version.getVersionInfo()?.hasLoader(ModLoader.NEOFORGE) == true) {
              // 关闭NeoForge 12早期加载屏动画
-@@ -318,7 +319,22 @@ class GameLauncher(
+@@ -318,7 +324,22 @@ class GameLauncher(
       * 如果版本独立设置了运行环境，则直接选定它；
       * 如果版本未设置，则根据全局设置或自动选择
       */
@@ -324,22 +336,20 @@ index cdf896c..0a8ed22 100644
          if (versionRuntime.isNotEmpty()) return versionRuntime
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
-index cecd42b..9f2036e 100644
+index cecd42b3..0d4be28d 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
-@@ -347,9 +347,20 @@ abstract class Launcher(
+@@ -347,9 +347,18 @@ abstract class Launcher(
          args.purgeArg("-XX:ActiveProcessorCount")
  
          //Add automatically generated args
 -        val ramAllocationString = ramAllocation.toString()
 +        //Pocket Client: never fall back to the 256 MB minimum when nothing was set; pick a heap from device RAM
-+        val effectiveRam = if (AllSettings.ramAllocation.getValue() == null && ramAllocation <= 256) {
-+            com.movtery.zalithlauncher.pocket.PocketTuning.defaultRamMb(com.movtery.zalithlauncher.context.GlobalContext)
-+        } else ramAllocation
++        val effectiveRam = com.movtery.zalithlauncher.pocket.PocketTuning.effectiveHeapMb(ramAllocation)
 +        val ramAllocationString = effectiveRam.toString()
          args.add("-Xms${ramAllocationString}M")
          args.add("-Xmx${ramAllocationString}M")
-+        com.movtery.zalithlauncher.pocket.PocketTuning.addGcArgs(args)
++        com.movtery.zalithlauncher.pocket.PocketTuning.addGcArgs(args, effectiveRam)
 +        //Pocket Client: compact object headers (Java 25+): 8-byte instead of 12-byte object headers
 +        if (AllSettings.pcJava25CompactHeaders.getValue() && this::runtime.isInitialized && runtime.javaVersion >= 25 &&
 +            args.none { it.contains("CompactObjectHeaders") }
@@ -351,7 +361,7 @@ index cecd42b..9f2036e 100644
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 new file mode 100644
-index 0000000..94817a8
+index 00000000..94817a8a
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 @@ -0,0 +1,118 @@
@@ -475,10 +485,10 @@ index 0000000..94817a8
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt
 new file mode 100644
-index 0000000..f7b4741
+index 00000000..022c9aed
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,211 @@
 +package com.movtery.zalithlauncher.pocket
 +
 +import android.content.Context
@@ -503,12 +513,19 @@ index 0000000..f7b4741
 + * Pocket Client: records battery use while the game runs, into logs/battery_<time>.csv.
 + * The logs folder is what "share logs" zips, so the file reaches us with the other logs.
 + *
-+ * Every 30 s: battery %, current, voltage, power, temperature, thermal status and Java heap. At the end a
-+ * summary line: minutes played, % used, % per minute and average power.
++ * Every 30 s: battery %, current, voltage, power, temperature, thermal status, FPS (average and lowest second
++ * of those 30 s) and the game process' memory (RSS). At the end a summary line: minutes played, % used, % per
++ * minute, average power, average FPS and peak memory. The Java heap itself is in gc_<time>.log (same folder).
 + */
 +object PocketBatteryLog {
 +    private const val TAG = "PocketBatteryLog"
 +    private const val INTERVAL_MS = 30_000L
++    private const val FPS_INTERVAL_MS = 1_000L
++
++    /** Time stamp of the running session's files, shared with the GC log (PocketTuning.addGcLog). */
++    @Volatile
++    var stamp: String? = null
++        private set
 +
 +    private var thread: HandlerThread? = null
 +    private var handler: Handler? = null
@@ -518,6 +535,12 @@ index 0000000..f7b4741
 +    private var lastPercent = -1
 +    private var powerSumMw = 0.0
 +    private var samples = 0
++    private var fpsSum = 0L
++    private var fpsCount = 0
++    private var fpsMin = Int.MAX_VALUE
++    private var totalFpsSum = 0L
++    private var totalFpsCount = 0
++    private var peakRssMb = 0L
 +
 +    fun start(context: Context, title: String) {
 +        if (thread != null) return
@@ -527,6 +550,7 @@ index 0000000..f7b4741
 +                ?: File(app.getExternalFilesDir(null), "logs")
 +            dir.mkdirs()
 +            val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.ROOT).format(Date())
++            this.stamp = stamp
 +            val out = File(dir, "battery_$stamp.csv")
 +            out.writeText(
 +                "# Pocket Client battery log\n" +
@@ -535,7 +559,7 @@ index 0000000..f7b4741
 +                    "# settings: resolution=${AllSettings.resolutionRatio.getValue()}% surfaceView=${AllSettings.pcUseSurfaceView.getValue()} " +
 +                    "java25=${AllSettings.pcJava25CompactHeaders.getValue()} maxRefresh=${AllSettings.requestMaxRefreshRate.getValue()} " +
 +                    "sustained=${AllSettings.sustainedPerformance.getValue()}\n" +
-+                    "minute,battery_pct,current_ma,voltage_v,power_w,temp_c,thermal,charging,heap_used_mb\n"
++                    "minute,battery_pct,current_ma,voltage_v,power_w,temp_c,thermal,charging,fps_avg,fps_min,rss_mb\n"
 +            )
 +            file = out
 +            startTime = System.currentTimeMillis()
@@ -543,6 +567,12 @@ index 0000000..f7b4741
 +            lastPercent = -1
 +            powerSumMw = 0.0
 +            samples = 0
++            fpsSum = 0
++            fpsCount = 0
++            fpsMin = Int.MAX_VALUE
++            totalFpsSum = 0
++            totalFpsCount = 0
++            peakRssMb = 0
 +
 +            val t = HandlerThread("PocketBatteryLog").also { it.start() }
 +            thread = t
@@ -554,6 +584,13 @@ index 0000000..f7b4741
 +                    handler?.postDelayed(this, INTERVAL_MS)
 +                }
 +            })
++            //FPS is a per-second counter in the native bridge; read it every second and average per row
++            h.postDelayed(object : Runnable {
++                override fun run() {
++                    sampleFps()
++                    handler?.postDelayed(this, FPS_INTERVAL_MS)
++                }
++            }, FPS_INTERVAL_MS)
 +        } catch (e: Exception) {
 +            Log.w(TAG, "Could not start the battery log", e)
 +        }
@@ -568,6 +605,32 @@ index 0000000..f7b4741
 +        thread?.quitSafely()
 +        thread = null
 +        file = null
++        stamp = null
++    }
++
++    private fun sampleFps() {
++        val fps = try {
++            org.lwjgl.glfw.CallbackBridge.getCurrentFps()
++        } catch (e: Throwable) { //native library not loaded yet
++            return
++        }
++        //0 while the game is still loading (nothing drawn yet): not a frame rate
++        if (fps <= 0) return
++        fpsSum += fps
++        fpsCount++
++        if (fps < fpsMin) fpsMin = fps
++        totalFpsSum += fps
++        totalFpsCount++
++    }
++
++    /** Memory of the whole game process (Java heap, native, graphics buffers): what Android looks at before killing it. */
++    private fun rssMb(): Long = try {
++        File("/proc/self/status").useLines { lines ->
++            lines.firstOrNull { it.startsWith("VmRSS:") }
++                ?.split(Regex("\\s+"))?.getOrNull(1)?.toLongOrNull()?.div(1024) ?: -1L
++        }
++    } catch (e: Exception) {
++        -1L
 +    }
 +
 +    private fun sample(context: Context) {
@@ -589,8 +652,13 @@ index 0000000..f7b4741
 +                (context.getSystemService(Context.POWER_SERVICE) as PowerManager).currentThermalStatus
 +            } else -1
 +
-+            val rt = Runtime.getRuntime()
-+            val heapMb = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
++            val fpsAvg = if (fpsCount > 0) fpsSum.toDouble() / fpsCount else 0.0
++            val fpsLow = if (fpsCount > 0) fpsMin else 0
++            fpsSum = 0
++            fpsCount = 0
++            fpsMin = Int.MAX_VALUE
++            val rss = rssMb()
++            if (rss > peakRssMb) peakRssMb = rss
 +            val minute = (System.currentTimeMillis() - startTime) / 60000.0
 +
 +            if (startPercent < 0) startPercent = percent
@@ -602,8 +670,8 @@ index 0000000..f7b4741
 +
 +            out.appendText(
 +                String.format(
-+                    Locale.ROOT, "%.1f,%d,%.0f,%.2f,%.2f,%.1f,%d,%b,%d\n",
-+                    minute, percent, currentMa, voltage, powerW, temp, thermal, plugged, heapMb
++                    Locale.ROOT, "%.1f,%d,%.0f,%.2f,%.2f,%.1f,%d,%b,%.1f,%d,%d\n",
++                    minute, percent, currentMa, voltage, powerW, temp, thermal, plugged, fpsAvg, fpsLow, rss
 +                )
 +            )
 +        } catch (e: Exception) {
@@ -618,11 +686,13 @@ index 0000000..f7b4741
 +            val used = if (startPercent >= 0 && lastPercent >= 0) startPercent - lastPercent else 0
 +            val perMinute = if (minutes > 0) used / minutes else 0.0
 +            val avgW = if (samples > 0) powerSumMw / samples / 1000 else 0.0
++            val avgFps = if (totalFpsCount > 0) totalFpsSum.toDouble() / totalFpsCount else 0.0
 +            out.appendText(
 +                String.format(
 +                    Locale.ROOT,
-+                    "# summary: %.1f min, %d%% used (%d%% -> %d%%), %.2f %%/min, average %.2f W while unplugged\n",
-+                    minutes, used, startPercent, lastPercent, perMinute, avgW
++                    "# summary: %.1f min, %d%% used (%d%% -> %d%%), %.2f %%/min, average %.2f W while unplugged, " +
++                        "average %.1f FPS, peak memory %d MB\n",
++                    minutes, used, startPercent, lastPercent, perMinute, avgW, avgFps, peakRssMb
 +                )
 +            )
 +        } catch (e: Exception) {
@@ -632,7 +702,7 @@ index 0000000..f7b4741
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt
 new file mode 100644
-index 0000000..192bab1
+index 00000000..192bab14
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt
 @@ -0,0 +1,112 @@
@@ -750,10 +820,10 @@ index 0000000..192bab1
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
 new file mode 100644
-index 0000000..fb57973
+index 00000000..809a00df
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,203 @@
 +package com.movtery.zalithlauncher.pocket
 +
 +import android.app.ActivityManager
@@ -789,20 +859,50 @@ index 0000000..fb57973
 +        }
 +    }
 +
++    /** The heap the game really gets: [defaultRamMb] when the player never set one (see Launcher.progressFinalUserArgs). */
++    fun effectiveHeapMb(ramAllocation: Int): Int =
++        if (com.movtery.zalithlauncher.setting.AllSettings.ramAllocation.getValue() == null && ramAllocation <= 256) {
++            defaultRamMb(com.movtery.zalithlauncher.context.GlobalContext)
++        } else ramAllocation
++
 +    /**
 +     * G1 tuned for short pauses: most stutter (and wasted CPU, i.e. battery) in modded play comes from long
 +     * collections. Skipped when the player set their own GC flags.
 +     */
-+    fun addGcArgs(args: MutableList<String>) {
++    fun addGcArgs(args: MutableList<String>, heapMb: Int) {
 +        addThreadBudget(args)
 +        if (args.any { (it.startsWith("-XX:+Use") && it.endsWith("GC")) || it.startsWith("-XX:MaxGCPauseMillis") || it.startsWith("-XX:G1") }) return
++        val small = heapMb <= LOW_MEMORY_HEAP_MB
 +        args.add("-XX:+UseG1GC")
 +        args.add("-XX:+UnlockExperimentalVMOptions")
 +        args.add("-XX:MaxGCPauseMillis=40")
 +        args.add("-XX:G1NewSizePercent=20")
-+        args.add("-XX:G1ReservePercent=20")
++        //The reserve is heap G1 keeps empty for emergencies: 20% of 512 MB would be 100 MB the game can't use
++        args.add("-XX:G1ReservePercent=${if (small) 10 else 20}")
 +        args.add("-XX:+ParallelRefProcEnabled")
 +        args.add("-XX:+DisableExplicitGC")
++        if (small) {
++            //Mods and resource packs hold many copies of the same strings; G1 merges them in the background
++            args.add("-XX:+UseStringDeduplication")
++            //Give cached (softly referenced) data back as soon as the heap gets tight, instead of running out
++            args.add("-XX:SoftRefLRUPolicyMSPerMB=0")
++        }
++    }
++
++    /** Heap at or below this gets the low-memory treatment (GC flags above, capped options in [tuneOptions]). */
++    const val LOW_MEMORY_HEAP_MB = 1024
++
++    /**
++     * GC log for this session next to the battery log (logs/gc_<time>.log). One line per collection, so it is
++     * nearly free, and it shows how full the Java heap really gets: what we need to tune for small heaps.
++     * Java 9+ only (the -Xlog syntax).
++     */
++    fun addGcLog(args: MutableList<String>, javaVersion: Int) {
++        if (javaVersion < 9 || args.any { it.startsWith("-Xlog:gc") || it.startsWith("-Xloggc") }) return
++        val stamp = PocketBatteryLog.stamp ?: return
++        val dir = runCatching { com.movtery.zalithlauncher.path.PathManager.DIR_LAUNCHER_LOGS }.getOrNull() ?: return
++        //No ':' in Android app paths, which -Xlog uses as its separator
++        args.add("-Xlog:gc:file=${File(dir, "gc_$stamp.log").absolutePath}:uptime:filecount=0")
 +    }
 +
 +    /**
@@ -826,10 +926,13 @@ index 0000000..fb57973
 +     * Once per game directory: distances, FPS cap and cheap visual options that fit the phone.
 +     * 60 FPS instead of uncapped roughly halves GPU work. Anything the player changes later is kept.
 +     */
-+    fun tuneOptions(context: Context, gameDir: File) {
++    fun tuneOptions(context: Context, gameDir: File, heapMb: Int) {
 +        try {
 +            val marker = File(gameDir, MARKER)
-+            if (marker.exists()) return
++            if (marker.exists()) {
++                capForSmallHeap(gameDir, heapMb)
++                return
++            }
 +            val ram = totalRamMb(context)
 +            val tier = when {
 +                ram < 4096 -> listOf("renderDistance" to "4", "simulationDistance" to "4", "maxFps" to "40", "particles" to "2")
@@ -847,21 +950,69 @@ index 0000000..fb57973
 +            )
 +
 +            val file = File(gameDir, "options.txt")
-+            val options = LinkedHashMap<String, String>()
-+            if (file.isFile) {
-+                file.readLines().forEach { line ->
-+                    val i = line.indexOf(':')
-+                    if (i > 0) options[line.substring(0, i)] = line.substring(i + 1)
-+                }
-+            }
++            val options = readOptions(file)
 +            (tier + cheap).forEach { (k, v) -> options[k] = v }
-+            gameDir.mkdirs()
-+            file.writeText(options.entries.joinToString("\n") { "${it.key}:${it.value}" } + "\n")
++            writeOptions(file, options)
 +            marker.createNewFile()
 +            Log.i(TAG, "Tuned options for $ram MB RAM: $tier")
++            //The once-only defaults above may be higher than a small heap can hold
++            capForSmallHeap(gameDir, heapMb)
 +        } catch (e: Exception) {
 +            Log.w(TAG, "Could not tune options", e)
 +        }
++    }
++
++    /**
++     * Every launch, when the Java heap is small (around 512 MB): lower the options that fill the heap, so the game
++     * doesn't run out of memory and crash. Loaded chunks grow with the square of the render distance, so it is
++     * the big one. Only lowers values; a bigger heap leaves the player's settings alone.
++     */
++    private fun capForSmallHeap(gameDir: File, heapMb: Int) {
++        if (heapMb > LOW_MEMORY_HEAP_MB) return
++        val file = File(gameDir, "options.txt")
++        val options = readOptions(file)
++        val maxDistance = when {
++            heapMb <= 640 -> 3
++            heapMb <= 768 -> 4
++            else -> 6
++        }
++        var changed = false
++        fun capInt(key: String, max: Int) {
++            val now = options[key]?.trim()?.toIntOrNull()
++            if (now == null || now > max) {
++                options[key] = max.toString()
++                changed = true
++            }
++        }
++        capInt("renderDistance", maxDistance)
++        capInt("simulationDistance", 5) //5 is the lowest the game allows
++        capInt("mipmapLevels", 0)
++        capInt("biomeBlendRadius", 0)
++        val scaling = options["entityDistanceScaling"]?.trim()?.toDoubleOrNull()
++        if (scaling == null || scaling > 0.5) {
++            options["entityDistanceScaling"] = "0.5"
++            changed = true
++        }
++        if (changed) {
++            writeOptions(file, options)
++            Log.i(TAG, "Capped options for a $heapMb MB heap: render distance $maxDistance")
++        }
++    }
++
++    private fun readOptions(file: File): LinkedHashMap<String, String> {
++        val options = LinkedHashMap<String, String>()
++        if (file.isFile) {
++            file.readLines().forEach { line ->
++                val i = line.indexOf(':')
++                if (i > 0) options[line.substring(0, i)] = line.substring(i + 1)
++            }
++        }
++        return options
++    }
++
++    private fun writeOptions(file: File, options: Map<String, String>) {
++        file.parentFile?.mkdirs()
++        file.writeText(options.entries.joinToString("\n") { "${it.key}:${it.value}" } + "\n")
 +    }
 +
 +    /**
@@ -878,7 +1029,7 @@ index 0000000..fb57973
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 new file mode 100644
-index 0000000..a48bc1a
+index 00000000..a48bc1a6
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 @@ -0,0 +1,217 @@
@@ -1100,7 +1251,7 @@ index 0000000..a48bc1a
 +        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index e31d4e4..eedd6c4 100644
+index e31d4e45..cfd98b5c 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 @@ -67,7 +67,7 @@ object AllSettings : SettingsRegistry() {
@@ -1133,11 +1284,74 @@ index e31d4e4..eedd6c4 100644
  
      /**
       * 使用系统的 Vulkan 驱动
+@@ -368,10 +374,12 @@ object AllSettings : SettingsRegistry() {
+      */
+     val launcherColorTheme = enumSetting(
+         "launcherColorTheme",
+-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ColorThemeType.DYNAMIC
+-        else ColorThemeType.EMBERMIRE
++        ColorThemeType.POCKET_GREEN //Pocket Client: green by default
+     )
+ 
++    /** Pocket Client: switched existing installs to the green theme once */
++    val pocketGreenApplied = boolSetting("pocketGreenApplied", false)
++
+     /**
+      * 自定义颜色主题色
+      */
+@@ -400,22 +408,22 @@ object AllSettings : SettingsRegistry() {
+     /**
+      * 持续型节日彩蛋效果
+      */
+-    val launcherFestivalEffects = boolSetting("launcherFestivalEffects", true)
++    val launcherFestivalEffects = boolSetting("launcherFestivalEffects", false) //Pocket Client: fewer effects, less battery
+ 
+     /**
+      * 动画倍速
+      */
+-    val launcherAnimateSpeed = intSetting("launcherAnimateSpeed", 5, 0..10)
++    val launcherAnimateSpeed = intSetting("launcherAnimateSpeed", 8, 0..10) //Pocket Client: faster, calmer animations
+ 
+     /**
+      * 动画幅度
+      */
+-    val launcherAnimateExtent = intSetting("launcherAnimateExtent", 5, 0..10)
++    val launcherAnimateExtent = intSetting("launcherAnimateExtent", 2, 0..10)
+ 
+     /**
+      * 启动器页面切换动画类型
+      */
+-    val launcherSwapAnimateType = enumSetting("launcherSwapAnimateType", TransitionAnimationType.JELLY_BOUNCE)
++    val launcherSwapAnimateType = enumSetting("launcherSwapAnimateType", TransitionAnimationType.SLICE_IN)
+ 
+     /**
+      * 主界面操作菜单的停泊侧
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
-index 517ae8e..1b7399b 100644
+index 517ae8e8..82fd79aa 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
-@@ -217,9 +217,8 @@ class MainActivity : BaseAppCompatActivity() {
+@@ -57,6 +57,7 @@ import com.movtery.zalithlauncher.notification.NotificationManager
+ import com.movtery.zalithlauncher.path.PathManager
+ import com.movtery.zalithlauncher.path.URL_SUPPORT
+ import com.movtery.zalithlauncher.setting.AllSettings
++import com.movtery.zalithlauncher.ui.theme.ColorThemeType
+ import com.movtery.zalithlauncher.ui.AndroidStringText
+ import com.movtery.zalithlauncher.ui.androidText
+ import com.movtery.zalithlauncher.ui.base.BaseAppCompatActivity
+@@ -209,6 +210,12 @@ class MainActivity : BaseAppCompatActivity() {
+         PluginLoader.loadAllPlugins(this, false)
+         refreshData()
+ 
++        //Pocket Client: move existing installs to the green theme once; a later choice in settings is kept
++        if (!AllSettings.pocketGreenApplied.getValue()) {
++            AllSettings.launcherColorTheme.save(ColorThemeType.POCKET_GREEN)
++            AllSettings.pocketGreenApplied.save(true)
++        }
++
+         //注册文件管理器事件监听
+         fmEventRegistrar = FileManagerEventRegistrar(this, ::onFileManagerEvent).also { it.start() }
+ 
+@@ -217,9 +224,8 @@ class MainActivity : BaseAppCompatActivity() {
  
          //检查更新
          if (!isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
@@ -1149,7 +1363,7 @@ index 517ae8e..1b7399b 100644
          }
  
          //错误信息展示
-@@ -352,6 +351,8 @@ class MainActivity : BaseAppCompatActivity() {
+@@ -352,6 +358,8 @@ class MainActivity : BaseAppCompatActivity() {
                          launchGameViewModel = launchGameViewModel,
                          exitActivity = {
                              this@MainActivity.finish()
@@ -1158,7 +1372,7 @@ index 517ae8e..1b7399b 100644
                          },
                          ensureVulkanSupported = vulkanCheckerViewModel::ensureSupported,
                          submitError = {
-@@ -572,6 +573,9 @@ class MainActivity : BaseAppCompatActivity() {
+@@ -572,6 +580,9 @@ class MainActivity : BaseAppCompatActivity() {
       * 检查启动器更新
       */
      private fun checkUpdate() {
@@ -1169,7 +1383,7 @@ index 517ae8e..1b7399b 100644
              try {
                  val success = launcherUpgradeViewModel.checkManually(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
-index 7c61ffd..006081b 100644
+index 7c61ffd3..006081be 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 @@ -199,6 +199,9 @@ class VMViewModel : ViewModel() {
@@ -1351,79 +1565,370 @@ index 7c61ffd..006081b 100644
                  }
              )
  
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
+index 8ba528f2..5d68f254 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
+@@ -137,7 +137,9 @@ enum class FirstLoginMenu {
+     /** 打开微软登录菜单 */
+     MICROSOFT,
+     /** 打开总登录菜单 */
+-    NORMAL
++    NORMAL,
++    /** Pocket Client: open the change skin dialog of the current account (from the home screen) */
++    CHANGE_SKIN
+ }
+ 
+ /**
+@@ -192,6 +194,16 @@ fun AccountManageScreen(
+             FirstLoginMenu.NORMAL -> {
+                 actions.onIntent(AccountManageIntent.UpdateLoginMenuOp(LoginMenuOperation.Login))
+             }
++            FirstLoginMenu.CHANGE_SKIN -> {
++                //same rule as the account list: third-party auth servers manage skins themselves
++                AccountsManager.currentAccountFlow.value
++                    ?.takeIf { !it.isAuthServerAccount() }
++                    ?.let { account ->
++                        actions.onIntent(
++                            AccountManageIntent.UpdateAccountSkinOp(AccountSkinOperation.ChangeSkin(account))
++                        )
++                    }
++            }
+         }
+ 
+         viewModel.effect.collect { effect ->
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-index 1762895..b3b6428 100644
+index 1762895f..9bc8e7d5 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Row
+@@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.PaddingValues
+ import androidx.compose.foundation.layout.Row
  import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxHeight
  import androidx.compose.foundation.layout.fillMaxSize
  import androidx.compose.foundation.layout.fillMaxWidth
 +import androidx.compose.foundation.layout.height
  import androidx.compose.foundation.layout.offset
  import androidx.compose.foundation.layout.padding
  import androidx.compose.foundation.layout.size
-@@ -185,6 +186,50 @@ fun LauncherScreen(
+@@ -42,6 +44,7 @@ import androidx.compose.material3.Icon
+ import androidx.compose.material3.IconButton
+ import androidx.compose.material3.LoadingIndicator
+ import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.FilledTonalButton
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.CompositionLocalProvider
+@@ -49,6 +52,7 @@ import androidx.compose.runtime.LaunchedEffect
+ import androidx.compose.runtime.getValue
+ import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.produceState
++import androidx.compose.runtime.key
+ import androidx.compose.runtime.remember
+ import androidx.compose.runtime.setValue
+ import androidx.compose.ui.Alignment
+@@ -76,12 +80,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
+ import com.movtery.cardgrid.state.rememberCardGridState
+ import com.movtery.guide.GuideSide
+ import com.movtery.guide.guideNode
++import com.movtery.petlib.ArmModel
+ import com.movtery.petlib.PetAnimation
+ import com.movtery.petlib.PetTapReaction
+ import com.movtery.zalithlauncher.R
+ import com.movtery.zalithlauncher.game.account.Account
+ import com.movtery.zalithlauncher.game.account.AccountsManager
+ import com.movtery.zalithlauncher.game.account.getAccountTypeName
++import com.movtery.zalithlauncher.game.account.wardrobe.isSlimModel
+ import com.movtery.zalithlauncher.game.account.wardrobe.toArmModel
+ import com.movtery.zalithlauncher.game.version.installed.Version
+ import com.movtery.zalithlauncher.game.version.installed.VersionsManager
+@@ -128,8 +134,7 @@ fun LauncherScreen(
+     startGuideOnce: (GuideKeys.Keys) -> Unit,
+ ) {
+     LaunchedEffect(Unit) {
+-        //发起新手引导
+-        startGuideOnce(GuideKeys.Main)
++        //Pocket Client: no guide here, it points at the card grid and side menu the simple home does not have
+     }
+ 
+     BaseScreen(
+@@ -173,6 +178,11 @@ fun LauncherScreen(
+                     screenKey = NormalNavKey.AccountManager(FirstLoginMenu.NONE)
+                 )
+             }
++            val toChangeSkin: () -> Unit = {
++                backStackViewModel.mainScreen.navigateTo(
++                    screenKey = NormalNavKey.AccountManager(FirstLoginMenu.CHANGE_SKIN)
++                )
++            }
+             val toVersionManageScreen: () -> Unit = {
+                 backStackViewModel.mainScreen.removeAndNavigateTo(
+                     remove = NestedNavKey.VersionSettings::class,
+@@ -185,72 +195,17 @@ fun LauncherScreen(
                  }
              }
  
-+            //read here: BoxWithConstraints' maxHeight is not reachable inside the Column scope below
-+            val portraitMenuHeight = minOf(maxHeight * 0.4f, 320.dp)
-+            if (maxHeight > maxWidth) {
-+                //Pocket Client: portrait home screen. Cards on top, the action menu (account, version,
-+                //launch) docked full-width at the bottom instead of a narrow side column.
-+                Column(modifier = Modifier.fillMaxSize()) {
-+                    CompositionLocalProvider(
-+                        LocalUriHandler provides object : UriHandler {
-+                            override fun openUri(uri: String) {
-+                                onOpenLink(uri)
-+                            }
-+                        }
-+                    ) {
-+                        ContentMenu(
-+                            modifier = Modifier
-+                                .weight(1f)
-+                                .fillMaxWidth(),
-+                            isVisible = isVisible,
-+                            onLaunchGame = { version ->
-+                                onLaunchGame(version)
-+                            },
-+                            onQuickPlayServer = onQuickPlayServer,
-+                            onOpenVersionSettings = navigateToVersions
-+                        )
-+                    }
-+                    CompositionLocalProvider(LocalActionMenuDrag provides dragState) {
-+                        ActionMenu(
-+                            modifier = Modifier
-+                                .fillMaxWidth()
-+                                .height(portraitMenuHeight)
-+                                .padding(ActionMenuOuterPadding),
-+                            isVisible = isVisible,
-+                            isTaller = false,
-+                            dockedSide = dockedSide,
-+                            onLaunchGame = onLaunchGame,
-+                            swapTargetValue = 40.dp,
-+                            pickUpScale = { 1f },
-+                            toAccountManageScreen = toAccountManageScreen,
-+                            toVersionManageScreen = toVersionManageScreen,
-+                            toVersionSettingsScreen = toVersionSettingsScreen
-+                        )
-+                    }
-+                }
-+            } else {
-             // 内容区域
-             Row(modifier = Modifier.fillMaxSize()) {
-                 // ActionMenu 对接到了 Start，留出空位
-@@ -251,6 +296,7 @@ fun LauncherScreen(
-                     )
-                 }
-             }
-+            } //Pocket Client: end of landscape layout
+-            // 内容区域
+-            Row(modifier = Modifier.fillMaxSize()) {
+-                // ActionMenu 对接到了 Start，留出空位
+-                if (dockedSide == ActionMenuSide.START) {
+-                    Spacer(modifier = Modifier.weight(ActionMenuWeight))
+-                }
+-
+-                CompositionLocalProvider(
+-                    LocalUriHandler provides object : UriHandler {
+-                        override fun openUri(uri: String) {
+-                            onOpenLink(uri)
+-                        }
+-                    }
+-                ) {
+-                ContentMenu(
+-                    modifier = Modifier
+-                        .guideNode(
+-                            key = GuideKeys.Main.Step.CardTip,
+-                            holeRadius = 0.dp
+-                        )
+-                        .weight(ContentWeight)
+-                        .offset { IntOffset(x = dragState.previewShift.value.roundToInt(), y = 0) },
+-                    isVisible = isVisible,
+-                    onLaunchGame = { version ->
+-                        onLaunchGame(version)
+-                    },
+-                    onQuickPlayServer = onQuickPlayServer,
+-                    onOpenVersionSettings = navigateToVersions
+-                )
+-                }
+-
+-                // ActionMenu 对接到了 End，留出空位
+-                if (dockedSide == ActionMenuSide.END) {
+-                    Spacer(modifier = Modifier.weight(ActionMenuWeight))
+-                }
+-            }
+-
+-            val isActionMenuTaller = maxHeight >= 600.dp
+-            CompositionLocalProvider(LocalActionMenuDrag provides dragState) {
+-                Box(
+-                    modifier = Modifier
+-                        .offset {
+-                            val translation = if (dragState.floating) {
+-                                dragState.cardPosition
+-                            } else {
+-                                dragState.landingOf(effectiveSide) + dragState.settleOffset.value
+-                            }
+-                            val x = if (isRtl) parentWidthPx - cardWidth.toPx() - translation.x else translation.x
+-                            IntOffset(x.roundToInt(), translation.y.roundToInt())
+-                        }
+-                        .size(cardWidth, cardHeight)
+-                ) {
+-                    ActionMenu(
+-                        modifier = Modifier.fillMaxSize(),
+-                        isVisible = isVisible,
+-                        isTaller = isActionMenuTaller,
+-                        dockedSide = dockedSide,
+-                        onLaunchGame = onLaunchGame,
+-                        swapTargetValue = if (dockedSide == ActionMenuSide.END) 40.dp else (-40).dp,
+-                        pickUpScale = { dragState.scale },
+-                        toAccountManageScreen = toAccountManageScreen,
+-                        toVersionManageScreen = toVersionManageScreen,
+-                        toVersionSettingsScreen = toVersionSettingsScreen
+-                    )
+-                }
+-            }
++            //Pocket Client: one simple home screen for both orientations: the player's skin, the account,
++            //the version and a big launch button. The card grid and the draggable side menu are gone.
++            PocketHome(
++                isPortrait = maxHeight > maxWidth,
++                isVisible = isVisible,
++                onLaunchGame = onLaunchGame,
++                toAccountManageScreen = toAccountManageScreen,
++                toChangeSkin = toChangeSkin,
++                toVersionManageScreen = toVersionManageScreen,
++                toVersionSettingsScreen = toVersionSettingsScreen
++            )
          }
      }
  }
+@@ -484,13 +439,19 @@ private fun VersionsContent(
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .padding(PaddingValues(horizontal = 12.dp))
+-                .padding(bottom = 8.dp),
++                .padding(bottom = 12.dp)
++                .height(56.dp), //Pocket Client: a big launch button that is easy to hit with a thumb
+             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp),
+             onClick = {
+                 onLaunchGame(null)
+             },
+             content = {
+-                MarqueeText(text = stringResource(R.string.main_launch_game))
++                //Pocket Client: the button says which version it will start
++                val launchName = version?.takeIf { !isRefreshing && it.isValid() }?.getVersionName()
++                MarqueeText(
++                    text = stringResource(R.string.main_launch_game) + (launchName?.let { " $it" } ?: ""),
++                    style = MaterialTheme.typography.titleMedium
++                )
+             }
+         )
+     }
+@@ -754,3 +715,143 @@ private fun VersionManagerLayout(
+         }
+     }
+ }
++
++/**
++ * Pocket Client: the simple home screen. Portrait stacks the skin above the account and version cards;
++ * landscape puts the skin on one side and the cards on the other, so both fill the screen evenly.
++ */
++@Composable
++private fun PocketHome(
++    isPortrait: Boolean,
++    isVisible: Boolean,
++    onLaunchGame: (Version?) -> Unit,
++    toAccountManageScreen: () -> Unit,
++    toChangeSkin: () -> Unit,
++    toVersionManageScreen: () -> Unit,
++    toVersionSettingsScreen: () -> Unit,
++) {
++    val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
++    val yOffset by swapAnimateDpAsState(
++        targetValue = 40.dp,
++        swapIn = isVisible
++    )
++
++    val cards: @Composable (Modifier) -> Unit = { modifier ->
++        Column(
++            modifier = modifier,
++            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
++        ) {
++            BackgroundCard(
++                modifier = Modifier.fillMaxWidth(),
++                shape = MaterialTheme.shapes.extraLarge,
++                onClick = toAccountManageScreen
++            ) {
++                AccountAvatarRow(
++                    modifier = Modifier.fillMaxWidth(),
++                    account = account,
++                )
++            }
++            BackgroundCard(
++                modifier = Modifier.fillMaxWidth(),
++                shape = MaterialTheme.shapes.extraLarge,
++            ) {
++                VersionsContent(
++                    modifier = Modifier.fillMaxWidth(),
++                    onLaunchGame = onLaunchGame,
++                    toVersionManageScreen = toVersionManageScreen,
++                    toVersionSettingsScreen = toVersionSettingsScreen,
++                )
++            }
++        }
++    }
++
++    val contentModifier = Modifier
++        .fillMaxSize()
++        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
++        .padding(16.dp)
++
++    if (isPortrait) {
++        Column(
++            modifier = contentModifier,
++            verticalArrangement = Arrangement.spacedBy(12.dp)
++        ) {
++            PocketSkin(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxWidth(),
++                account = account,
++                onChangeSkin = toChangeSkin
++            )
++            cards(Modifier.fillMaxWidth())
++        }
++    } else {
++        Row(
++            modifier = contentModifier,
++            horizontalArrangement = Arrangement.spacedBy(16.dp)
++        ) {
++            PocketSkin(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxHeight(),
++                account = account,
++                onChangeSkin = toChangeSkin
++            )
++            cards(
++                Modifier
++                    .weight(1f)
++                    .fillMaxHeight()
++            )
++        }
++    }
++}
++
++@Composable
++private fun PocketSkin(
++    modifier: Modifier = Modifier,
++    account: Account?,
++    onChangeSkin: () -> Unit,
++) {
++    val refreshWardrobe by AccountsManager.refreshWardrobe.collectAsStateWithLifecycle()
++    val skinStamp = account?.getSkinFile()?.lastModified()
++    val capeStamp = account?.getCapeFile()?.lastModified()
++    val skinBytes by produceState<ByteArray?>(null, account, refreshWardrobe, skinStamp) {
++        value = account?.getSkinFile()?.takeIf { it.exists() }
++            ?.inputStream()?.use { it.readBytes() }
++    }
++    val capeBytes by produceState<ByteArray?>(null, account, refreshWardrobe, capeStamp) {
++        value = account?.getCapeFile()?.takeIf { it.exists() }
++            ?.inputStream()?.use { it.readBytes() }
++    }
++    //the arm model is read from the skin picture when the account does not know it (offline accounts
++    //and imported skins), so slim (Alex) and wide (Steve) skins both show correctly
++    val armModel by produceState<ArmModel?>(null, account, refreshWardrobe, skinStamp) {
++        value = account?.skinModelType?.toArmModel()
++            ?: account?.getSkinFile()?.takeIf { it.exists() }?.let { file ->
++                if (file.isSlimModel()) ArmModel.Slim else ArmModel.Classic
++            }
++    }
++
++    Column(
++        modifier = modifier,
++        horizontalAlignment = Alignment.CenterHorizontally,
++        verticalArrangement = Arrangement.spacedBy(8.dp)
++    ) {
++        //keyed on the picture, so the model is rebuilt when the skin or the arm type changes
++        key(skinBytes?.contentHashCode(), armModel) {
++            PetModelView(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxWidth(),
++                skin = skinBytes,
++                cape = capeBytes,
++                arm = armModel,
++                animation = PetAnimation.Idle,
++                tapReaction = PetTapReaction.Interact,
++                dragYaw = true
++            )
++        }
++        FilledTonalButton(onClick = onChangeSkin) {
++            Text(stringResource(R.string.pocket_change_skin))
++        }
++    }
++}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
+index 1fb77115..ed5a19af 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
+@@ -184,6 +184,7 @@ fun LauncherSettingsScreen(
+                                 ColorThemeType.VERDANTFIELD -> stringResource(R.string.theme_color_verdant_field)
+                                 ColorThemeType.URBAN_ASH -> stringResource(R.string.theme_color_urban_ash)
+                                 ColorThemeType.VERDANT_DAWN -> stringResource(R.string.theme_color_verdant_dawn)
++                                ColorThemeType.POCKET_GREEN -> stringResource(R.string.theme_color_pocket_green)
+                                 ColorThemeType.CUSTOM -> stringResource(R.string.generic_custom)
+                             }
+                         },
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
-index 4f13ce7..d825610 100644
+index 4f13ce72..d825610d 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
 @@ -315,6 +315,22 @@ fun RendererSettingsScreen(
@@ -1449,8 +1954,259 @@ index 4f13ce7..d825610 100644
                      SwitchSettingsCard(
                          modifier = Modifier.fillMaxWidth(),
                          position = CardPosition.Middle,
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt
+index d10327cd..c576eede 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt
+@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.Box
+ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.PaddingValues
+ import androidx.compose.foundation.layout.Row
++import androidx.compose.foundation.layout.RowScope
+ import androidx.compose.foundation.layout.Spacer
+ import androidx.compose.foundation.layout.fillMaxHeight
+ import androidx.compose.foundation.layout.fillMaxSize
+@@ -44,17 +45,23 @@ import androidx.compose.foundation.layout.width
+ import androidx.compose.foundation.lazy.LazyColumn
+ import androidx.compose.foundation.lazy.items
+ import androidx.compose.material3.CardDefaults
++import androidx.compose.material3.DropdownMenuItem
++import androidx.compose.material3.DropdownMenu
+ import androidx.compose.material3.Icon
+ import androidx.compose.material3.IconButton
+ import androidx.compose.material3.LinearProgressIndicator
+ import androidx.compose.material3.LocalContentColor
+ import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.NavigationBarItem
++import androidx.compose.material3.NavigationBar
+ import androidx.compose.material3.Surface
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.CompositionLocalProvider
+ import androidx.compose.runtime.LaunchedEffect
+ import androidx.compose.runtime.getValue
++import androidx.compose.runtime.setValue
++import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.remember
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
+@@ -64,6 +71,7 @@ import androidx.compose.ui.graphics.Shape
+ import androidx.compose.ui.graphics.painter.Painter
+ import androidx.compose.ui.platform.LocalLayoutDirection
+ import androidx.compose.ui.res.painterResource
++import androidx.compose.ui.platform.LocalConfiguration
+ import androidx.compose.ui.res.stringResource
+ import androidx.compose.ui.text.TextStyle
+ import androidx.compose.ui.unit.LayoutDirection
+@@ -157,6 +165,8 @@ fun MainScreen(
+     }
+ 
+     val mainScreenKey = screenBackStackModel.mainScreen.currentKey
++    val configuration = LocalConfiguration.current
++    val isPortrait = configuration.screenHeightDp > configuration.screenWidthDp
+     val inLauncherScreen = mainScreenKey == null || mainScreenKey is NormalNavKey.LauncherMain
+ 
+     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
+@@ -183,6 +193,7 @@ fun MainScreen(
+                 inLauncherScreen = inLauncherScreen,
+                 taskRunning = tasks.isEmpty(),
+                 isTasksExpanded = isTaskMenuExpanded,
++                isPortrait = isPortrait,
+                 contentColor = onBackgroundColor(),
+                 onScreenBack = {
+                     screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+@@ -244,6 +255,36 @@ fun MainScreen(
+                     changeTasksExpandedState()
+                 }
+             }
++
++            if (isPortrait) {
++                PocketBottomBar(
++                    inLauncherScreen = inLauncherScreen,
++                    inDownloadScreen = mainScreenKey is NestedNavKey.Download,
++                    inMultiplayerScreen = mainScreenKey is NormalNavKey.Multiplayer,
++                    inSettingsScreen = mainScreenKey is NestedNavKey.Settings,
++                    toMainScreen = toMainScreen,
++                    toDownloadScreen = { screenBackStackModel.navigateToDownload() },
++                    toMultiplayerScreen = {
++                        screenBackStackModel.mainScreen.removeAndNavigateTo(
++                            removes = screenBackStackModel.clearBeforeNavKeys,
++                            screenKey = NormalNavKey.Multiplayer
++                        )
++                    },
++                    openFileManager = {
++                        eventViewModel.sendEvent(
++                            EventViewModel.Event.OpenFileManager(
++                                rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
++                            )
++                        )
++                    },
++                    toSettingsScreen = {
++                        screenBackStackModel.mainScreen.removeAndNavigateTo(
++                            removes = screenBackStackModel.clearBeforeNavKeys,
++                            screenKey = screenBackStackModel.settingsScreen
++                        )
++                    }
++                )
++            }
+         }
+     }
+ }
+@@ -254,6 +295,7 @@ private fun <E: TitledNavKey> TopBar(
+     inLauncherScreen: Boolean,
+     taskRunning: Boolean,
+     isTasksExpanded: Boolean,
++    isPortrait: Boolean,
+     modifier: Modifier = Modifier,
+     contentColor: Color,
+     onScreenBack: () -> Unit,
+@@ -410,25 +452,17 @@ private fun <E: TitledNavKey> TopBar(
+                     }
+                 }
+ 
+-                IconButton(
+-                    onClick = openFileManager
+-                ) {
+-                    Icon(
+-                        painter = painterResource(R.drawable.ic_folder_filled),
+-                        contentDescription = null
++                //Pocket Client: portrait uses the bottom bar instead; landscape keeps downloads and settings here
++                //and folds files and multiplayer into one menu
++                if (!isPortrait) {
++                    PocketMoreMenu(
++                        inMultiplayerScreen = inMultiplayerScreen,
++                        toMultiplayerScreen = toMultiplayerScreen,
++                        openFileManager = openFileManager
+                     )
+                 }
+ 
+-                TopBarRailItem(
+-                    selected = inMultiplayerScreen,
+-                    painter = painterResource(R.drawable.ic_group_filled),
+-                    text = stringResource(R.string.terracotta),
+-                    onClick = {
+-                        if (!inMultiplayerScreen) toMultiplayerScreen()
+-                    },
+-                )
+-
+-                TopBarRailItem(
++                if (!isPortrait) TopBarRailItem(
+                     selected = inDownloadScreen,
+                     painter = painterResource(R.drawable.ic_download_2_filled),
+                     text = stringResource(R.string.generic_download),
+@@ -437,7 +471,7 @@ private fun <E: TitledNavKey> TopBar(
+                     },
+                 )
+ 
+-                TopBarRailItem(
++                if (!isPortrait) TopBarRailItem(
+                     selected = inSettingsScreen,
+                     painter = painterResource(R.drawable.ic_settings_filled),
+                     text = stringResource(R.string.generic_setting),
+@@ -450,6 +484,101 @@ private fun <E: TitledNavKey> TopBar(
+     }
+ }
+ 
++@Composable
++private fun PocketMoreMenu(
++    inMultiplayerScreen: Boolean,
++    toMultiplayerScreen: () -> Unit,
++    openFileManager: () -> Unit,
++) {
++    var expanded by remember { mutableStateOf(false) }
++    Box {
++        IconButton(onClick = { expanded = true }) {
++            Icon(
++                painter = painterResource(R.drawable.ic_more_vert),
++                contentDescription = stringResource(R.string.pocket_more)
++            )
++        }
++        DropdownMenu(
++            expanded = expanded,
++            onDismissRequest = { expanded = false },
++            shape = MaterialTheme.shapes.extraLarge
++        ) {
++            DropdownMenuItem(
++                text = { Text(stringResource(R.string.pocket_files)) },
++                leadingIcon = {
++                    Icon(
++                        painter = painterResource(R.drawable.ic_folder_filled),
++                        contentDescription = null
++                    )
++                },
++                onClick = {
++                    expanded = false
++                    openFileManager()
++                }
++            )
++            DropdownMenuItem(
++                text = { Text(stringResource(R.string.terracotta)) },
++                leadingIcon = {
++                    Icon(
++                        painter = painterResource(R.drawable.ic_group_filled),
++                        contentDescription = null
++                    )
++                },
++                onClick = {
++                    expanded = false
++                    if (!inMultiplayerScreen) toMultiplayerScreen()
++                }
++            )
++        }
++    }
++}
++
++/**
++ * Pocket Client: bottom navigation for portrait phones, within thumb reach.
++ */
++@Composable
++private fun PocketBottomBar(
++    inLauncherScreen: Boolean,
++    inDownloadScreen: Boolean,
++    inMultiplayerScreen: Boolean,
++    inSettingsScreen: Boolean,
++    toMainScreen: () -> Unit,
++    toDownloadScreen: () -> Unit,
++    toMultiplayerScreen: () -> Unit,
++    openFileManager: () -> Unit,
++    toSettingsScreen: () -> Unit,
++    modifier: Modifier = Modifier,
++) {
++    NavigationBar(modifier = modifier) {
++        PocketNavItem(inLauncherScreen, R.drawable.ic_home_filled, stringResource(R.string.generic_main_menu), toMainScreen)
++        PocketNavItem(inDownloadScreen, R.drawable.ic_download_2_filled, stringResource(R.string.generic_download), toDownloadScreen)
++        PocketNavItem(inMultiplayerScreen, R.drawable.ic_group_filled, stringResource(R.string.terracotta), toMultiplayerScreen)
++        PocketNavItem(false, R.drawable.ic_folder_filled, stringResource(R.string.pocket_files), openFileManager)
++        PocketNavItem(inSettingsScreen, R.drawable.ic_settings_filled, stringResource(R.string.generic_setting), toSettingsScreen)
++    }
++}
++
++@Composable
++private fun RowScope.PocketNavItem(
++    selected: Boolean,
++    icon: Int,
++    label: String,
++    onClick: () -> Unit
++) {
++    NavigationBarItem(
++        selected = selected,
++        onClick = { if (!selected) onClick() },
++        icon = {
++            Icon(
++                painter = painterResource(icon),
++                contentDescription = label
++            )
++        },
++        label = { Text(text = label, maxLines = 1) },
++        alwaysShowLabel = false
++    )
++}
++
+ @Composable
+ private fun TopBarRailItem(
+     selected: Boolean,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
-index 798967a..660ae18 100644
+index 798967a3..660ae18a 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 @@ -92,7 +92,8 @@ private fun TopBar(
@@ -1463,11 +2219,223 @@ index 798967a..660ae18 100644
              )
          }
      }
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt
+index 3254fee3..ea836b33 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt
+@@ -39,5 +39,7 @@ enum class ColorThemeType {
+     VERDANTFIELD,
+     URBAN_ASH,
+     VERDANT_DAWN,
++    /** Pocket Client: Minecraft grass green with green backgrounds */
++    POCKET_GREEN,
+     CUSTOM
+ }
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt
+index 3dec1c67..77448a85 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt
+@@ -210,6 +210,7 @@ private fun getPredefinedSeedColor(theme: ColorThemeType, darkTheme: Boolean): I
+         ColorThemeType.VERDANTFIELD -> if (darkTheme) 0xFFD2C972.toInt() else 0xFF676014.toInt()
+         ColorThemeType.URBAN_ASH -> if (darkTheme) 0xFFC7C6C6.toInt() else 0xFF5E5E5F.toInt()
+         ColorThemeType.VERDANT_DAWN -> if (darkTheme) 0xFF8ED88E.toInt() else 0xFF004814.toInt()
++        ColorThemeType.POCKET_GREEN -> if (darkTheme) 0xFF8FD866.toInt() else 0xFF2F6E12.toInt()
+         else -> 0xFFA63A17.toInt()
+     }
+ }
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt
+index 605edede..5dac14de 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt
+@@ -599,6 +599,47 @@ private fun customDark(
+     )
+ }
+ 
++//Pocket Client: Minecraft grass green, with the backgrounds and cards tinted green too
++private val pocketGreenLight = verdantDawnLight.copy(
++    primary = Color(0xFF2F6E12),
++    onPrimary = Color(0xFFFFFFFF),
++    primaryContainer = Color(0xFFB8EE96),
++    onPrimaryContainer = Color(0xFF0A2100),
++    secondaryContainer = Color(0xFFCFE8BF),
++    onSecondaryContainer = Color(0xFF13250B),
++    inversePrimary = Color(0xFF8FD866),
++    background = Color(0xFFEAF5E1),
++    surface = Color(0xFFEAF5E1),
++    surfaceVariant = Color(0xFFD5E6C8),
++    surfaceDim = Color(0xFFCFE0C3),
++    surfaceBright = Color(0xFFF3FBEC),
++    surfaceContainerLowest = Color(0xFFFFFFFF),
++    surfaceContainerLow = Color(0xFFE2F0D8),
++    surfaceContainer = Color(0xFFDAEBCE),
++    surfaceContainerHigh = Color(0xFFD1E5C3),
++    surfaceContainerHighest = Color(0xFFC8DFB9),
++)
++
++private val pocketGreenDark = verdantDawnDark.copy(
++    primary = Color(0xFF8FD866),
++    onPrimary = Color(0xFF0F2A05),
++    primaryContainer = Color(0xFF3E7A1F),
++    onPrimaryContainer = Color(0xFFD8F5C4),
++    secondaryContainer = Color(0xFF2C4A22),
++    onSecondaryContainer = Color(0xFFCDEBBD),
++    inversePrimary = Color(0xFF2F6E12),
++    background = Color(0xFF0F1E0D),
++    surface = Color(0xFF0F1E0D),
++    surfaceVariant = Color(0xFF2F4A2A),
++    surfaceDim = Color(0xFF0F1E0D),
++    surfaceBright = Color(0xFF2E4429),
++    surfaceContainerLowest = Color(0xFF0A1609),
++    surfaceContainerLow = Color(0xFF152713),
++    surfaceContainer = Color(0xFF1A2E17),
++    surfaceContainerHigh = Color(0xFF22381F),
++    surfaceContainerHighest = Color(0xFF2B4227),
++)
++
+ @Composable
+ fun ZalithLauncherTheme(
+     darkTheme: Boolean = isLauncherInDarkTheme(),
+@@ -629,6 +670,7 @@ fun ZalithLauncherTheme(
+                 ColorThemeType.VERDANTFIELD -> verdantFieldDark
+                 ColorThemeType.URBAN_ASH -> urbanAshDark
+                 ColorThemeType.VERDANT_DAWN -> verdantDawnDark
++                ColorThemeType.POCKET_GREEN -> pocketGreenDark
+                 ColorThemeType.CUSTOM -> customDark(
+                     color = customColor,
+                     style = customPaletteStyle
+@@ -644,6 +686,7 @@ fun ZalithLauncherTheme(
+                 ColorThemeType.VERDANTFIELD -> verdantFieldLight
+                 ColorThemeType.URBAN_ASH -> urbanAshLight
+                 ColorThemeType.VERDANT_DAWN -> verdantDawnLight
++                ColorThemeType.POCKET_GREEN -> pocketGreenLight
+                 ColorThemeType.CUSTOM -> customLight(
+                     color = customColor,
+                     style = customPaletteStyle
+diff --git a/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml b/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml
+index 284f6904..f85dd805 100644
+--- a/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml
++++ b/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml
+@@ -1,51 +1,22 @@
+ <vector xmlns:android="http://schemas.android.com/apk/res/android"
+     android:width="108dp"
+     android:height="108dp"
+-    android:viewportWidth="1556"
+-    android:viewportHeight="1797">
+-  <group android:scaleX="0.4329438"
+-      android:scaleY="0.5"
+-      android:translateX="441.16974"
+-      android:translateY="449.25">
++    android:viewportWidth="108"
++    android:viewportHeight="108">
++    <!-- Pocket Client: a Minecraft style grass block -->
+     <path
+-        android:pathData="M778,1797l-778,-449l0,-898l778,449l0,898z"
+-        android:strokeWidth="0"
+-        android:fillColor="#ffcd30"/>
++        android:pathData="M30,41L54,54L54,82L30,69Z"
++        android:fillColor="#8B5A2B"/>
+     <path
+-        android:pathData="M778,1797l778,-449l0,-898l-778,449l0,898z"
+-        android:strokeWidth="0"
+-        android:fillColor="#bb7300"/>
++        android:pathData="M54,54L78,41L78,69L54,82Z"
++        android:fillColor="#6E4520"/>
+     <path
+-        android:pathData="M0,450l778,449l778,-449l-778,-450l-778,450z"
+-        android:strokeWidth="0"
+-        android:fillColor="#fff29a"/>
++        android:pathData="M30,41L54,54L54,61L30,48Z"
++        android:fillColor="#5EA82E"/>
+     <path
+-        android:pathData="m778,1399.3c-8.6,0 -17.3,-2.2 -25,-6.7l-390,-225.2c-15.5,-8.9 -25,-25.4 -25,-43.3v-450.3c0,-17.9 9.5,-34.4 25,-43.3l390,-225.2c7.7,-4.5 16.4,-6.7 25,-6.7s17.3,2.2 25,6.7l390,225.2c15.5,8.9 25,25.4 25,43.3v450.3c0,17.9 -9.5,34.4 -25,43.3l-390,225.2c-7.7,4.5 -16.4,6.7 -25,6.7Z"
+-        android:strokeWidth="0"
+-        android:fillColor="#fff"/>
++        android:pathData="M54,54L78,41L78,48L54,61Z"
++        android:fillColor="#4D8F25"/>
+     <path
+-        android:pathData="m778,448.7l390,225.2v450.3l-390,225.2 -390,-225.2v-450.3l390,-225.2m0,-100c-17.3,0 -34.5,4.5 -50,13.4l-390,225.2c-30.9,17.9 -50,50.9 -50,86.6v450.3c0,35.7 19.1,68.7 50,86.6l390,225.2c15.5,8.9 32.7,13.4 50,13.4s34.5,-4.5 50,-13.4l390,-225.2c30.9,-17.9 50,-50.9 50,-86.6v-450.3c0,-35.7 -19.1,-68.7 -50,-86.6l-390,-225.2c-15.5,-8.9 -32.7,-13.4 -50,-13.4h0Z"
+-        android:strokeWidth="0"
+-        android:fillColor="#fff"/>
+-    <path
+-        android:pathData="M778,1349l-389.2,-224.6l0,-449.3l389.2,224.6l0,449.3z"
+-        android:strokeWidth="0"
+-        android:fillColor="#58a939"/>
+-    <path
+-        android:pathData="M778,1349l389.2,-224.6l0,-449.3l-389.2,224.6l0,449.3z"
+-        android:strokeWidth="0"
+-        android:fillColor="#1f7112"/>
+-    <path
+-        android:pathData="M388.8,675.1l389.2,224.6l389.2,-224.6l-389.2,-225.1l-389.2,225.1z"
+-        android:strokeWidth="0"
+-        android:fillColor="#82d85a"/>
+-    <path
+-        android:pathData="M778,1348.7l-389.2,-224.6l0,-314.5l389.2,224.6l0,314.5z"
+-        android:strokeWidth="0"
+-        android:fillColor="#6a4e30"/>
+-    <path
+-        android:pathData="M777.8,1348.7l389.2,-224.6l0,-314.5l-389.2,224.6l0,314.5z"
+-        android:strokeWidth="0"
+-        android:fillColor="#331c0f"/>
+-  </group>
++        android:pathData="M54,28L78,41L54,54L30,41Z"
++        android:fillColor="#7CCB3F"/>
+ </vector>
+diff --git a/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml b/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml
+index 25c575ca..52493654 100644
+--- a/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml
++++ b/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml
+@@ -1,19 +1,9 @@
+ <vector xmlns:android="http://schemas.android.com/apk/res/android"
+     android:width="108dp"
+     android:height="108dp"
+-    android:viewportWidth="1558.9"
+-    android:viewportHeight="1800.1">
+-  <group android:scaleX="0.41568357"
+-      android:scaleY="0.48"
+-      android:translateX="455.44543"
+-      android:translateY="468.026">
++    android:viewportWidth="108"
++    android:viewportHeight="108">
+     <path
+-        android:pathData="M390,674.9l0,450.3l390,225.2l390,-225.2l0,-450.3l-390,-225.2l-390,225.2z"
+-        android:strokeWidth="0"
+-        android:fillColor="#fff"/>
+-    <path
+-        android:pathData="m779.5,0l779.5,450v900l-779.5,450L0,1350.1L0,450L779.5,0ZM289,675.6v448.9c0,36.2 19.3,69.6 50.6,87.7l388.8,224.4c31.3,18.1 69.9,18.1 101.2,0l388.8,-224.4c31.3,-18.1 50.6,-51.5 50.6,-87.7v-448.9c0,-36.2 -19.3,-69.6 -50.6,-87.7l-388.8,-224.4c-31.3,-18.1 -69.9,-18.1 -101.2,0l-388.8,224.4c-31.3,18.1 -50.6,51.5 -50.6,87.7Z"
+-        android:strokeWidth="0"
+-        android:fillColor="#fff"/>
+-  </group>
++        android:pathData="M54,28L78,41L78,69L54,82L30,69L30,41Z"
++        android:fillColor="#000000"/>
+ </vector>
+diff --git a/ZalithLauncher/src/main/res/values/ic_launcher_background.xml b/ZalithLauncher/src/main/res/values/ic_launcher_background.xml
+index 36612b99..176dd5c1 100644
+--- a/ZalithLauncher/src/main/res/values/ic_launcher_background.xml
++++ b/ZalithLauncher/src/main/res/values/ic_launcher_background.xml
+@@ -1,4 +1,4 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+-    <color name="ic_launcher_background">#FFE08F</color>
++    <color name="ic_launcher_background">#234D0E</color>
+ </resources>
+\ No newline at end of file
 diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
-index 7ad1ae1..db07f15 100644
+index 7ad1ae13..aa234d8d 100644
 --- a/ZalithLauncher/src/main/res/values/strings.xml
 +++ b/ZalithLauncher/src/main/res/values/strings.xml
-@@ -1732,6 +1732,10 @@
+@@ -136,6 +136,10 @@
+     <string name="theme_color_urban_ash">Urban Ash</string>
+     <!-- Option of the theme color setting in launcher settings -->
+     <string name="theme_color_verdant_dawn">Silent Forest Dawn</string>
++    <string name="theme_color_pocket_green">Pocket Green</string>
++    <string name="pocket_change_skin">Change skin</string>
++    <string name="pocket_more">More</string>
++    <string name="pocket_files">Files</string>
+     <!-- Title of the color picker dialog -->
+     <string name="theme_color_picker_title">Color Picker</string>
+     <!-- Button in the color picker dialog to edit the color as a hex code -->
+@@ -1732,6 +1736,10 @@
      <!-- Summary of the game fullscreen switch in the Renderer settings tab -->
      <string name="settings_renderer_full_screen_summary">Enable fullscreen mode, ignoring safe areas like notches and punch-holes</string>
      <!-- Switch title in the Renderer settings tab to enable the sustained performance mode -->
