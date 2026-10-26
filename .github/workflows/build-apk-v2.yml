@@ -70,13 +70,37 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      # Keeps Gradle dependencies and the Gradle build cache between runs, so unchanged modules are reused.
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-write-only: false
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      # The Rust part (PetLib) rarely changes; reuse its build output between runs.
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            zl2/PetLib/rust/target
+          key: petlib-rust-${{ runner.os }}-${{ env.ZL2_REF }}
+          restore-keys: petlib-rust-${{ runner.os }}-
+
+      # Native (NDK) objects from the previous build, so only changed C files are recompiled.
+      - name: Cache native build
+        uses: actions/cache@v4
+        with:
+          path: |
+            zl2/ZalithLauncher/.cxx
+            zl2/LWJGL/**/.cxx
+          key: ndk-objs-${{ runner.os }}-${{ env.ZL2_REF }}-${{ hashFiles('launcher2/pocketclient.patch') }}
+          restore-keys: ndk-objs-${{ runner.os }}-${{ env.ZL2_REF }}-
 
       - name: Install cargo-ndk
         run: |
@@ -99,7 +123,7 @@ jobs:
         working-directory: zl2
         run: |
           chmod +x gradlew
-          bash "$GITHUB_WORKSPACE/.github/scripts/run-logged.sh" "Build Pocket Client 2" ./gradlew ZalithLauncher:assembleDebug -Darch=${ARCH} --stacktrace
+          bash "$GITHUB_WORKSPACE/.github/scripts/run-logged.sh" "Build Pocket Client 2" ./gradlew ZalithLauncher:assembleDebug -Darch=${ARCH} --build-cache --parallel --stacktrace
 
       # Publishes the full APK plus a bsdiff patch from the previous build, and updates pc_update.json on the
       # "v2-update" release. The app downloads only the patch when it has the previous build installed.
