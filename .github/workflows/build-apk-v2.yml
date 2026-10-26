@@ -15,6 +15,11 @@ on:
 permissions:
   contents: write
 
+# One build at a time: each build makes patches from the previously published ones.
+concurrency:
+  group: pocket-client-2-build
+  cancel-in-progress: false
+
 env:
   # Upstream commit the patch was made against. Bump only together with a regenerated patch.
   ZL2_REF: d3bc11b28047307c56a01bacc1b8f84f939514d8
