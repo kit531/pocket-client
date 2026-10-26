@@ -44,7 +44,7 @@ index b0f3e16..90d5ed1 100644
  # your OAuth client id
  #oauth_client_id=xxx
 diff --git a/ZalithLauncher/src/main/AndroidManifest.xml b/ZalithLauncher/src/main/AndroidManifest.xml
-index 8b715c9..9ea4b27 100644
+index 8b715c9..c4e3674 100644
 --- a/ZalithLauncher/src/main/AndroidManifest.xml
 +++ b/ZalithLauncher/src/main/AndroidManifest.xml
 @@ -8,6 +8,7 @@
@@ -55,6 +55,24 @@ index 8b715c9..9ea4b27 100644
      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+@@ -51,7 +52,7 @@
+             android:exported="true"
+             android:windowSoftInputMode="adjustResize"
+             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
+-            android:screenOrientation="sensorLandscape">
++            android:screenOrientation="fullUser">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 
+@@ -111,7 +112,7 @@
+             android:name=".ui.activities.MainActivity"
+             android:launchMode="singleTop"
+             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
+-            android:screenOrientation="sensorLandscape" />
++            android:screenOrientation="fullUser" />
+         <activity
+             android:name=".ui.activities.ControlEditorActivity"
+             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 index da9fa2a..fa2a80b 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
@@ -523,6 +541,75 @@ index 517ae8e..5a0433d 100644
          lifecycleScope.launch(Dispatchers.IO) {
              try {
                  val success = launcherUpgradeViewModel.checkManually(
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
+index 1762895..dc63e11 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
+@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.Spacer
+ import androidx.compose.foundation.layout.fillMaxSize
+ import androidx.compose.foundation.layout.fillMaxWidth
++import androidx.compose.foundation.layout.height
+ import androidx.compose.foundation.layout.offset
+ import androidx.compose.foundation.layout.padding
+ import androidx.compose.foundation.layout.size
+@@ -185,6 +186,48 @@ fun LauncherScreen(
+                 }
+             }
+ 
++            if (maxHeight > maxWidth) {
++                //Pocket Client: portrait home screen. Cards on top, the action menu (account, version,
++                //launch) docked full-width at the bottom instead of a narrow side column.
++                Column(modifier = Modifier.fillMaxSize()) {
++                    CompositionLocalProvider(
++                        LocalUriHandler provides object : UriHandler {
++                            override fun openUri(uri: String) {
++                                onOpenLink(uri)
++                            }
++                        }
++                    ) {
++                        ContentMenu(
++                            modifier = Modifier
++                                .weight(1f)
++                                .fillMaxWidth(),
++                            isVisible = isVisible,
++                            onLaunchGame = { version ->
++                                onLaunchGame(version)
++                            },
++                            onQuickPlayServer = onQuickPlayServer,
++                            onOpenVersionSettings = navigateToVersions
++                        )
++                    }
++                    CompositionLocalProvider(LocalActionMenuDrag provides dragState) {
++                        ActionMenu(
++                            modifier = Modifier
++                                .fillMaxWidth()
++                                .height(minOf(maxHeight * 0.4f, 320.dp))
++                                .padding(ActionMenuOuterPadding),
++                            isVisible = isVisible,
++                            isTaller = false,
++                            dockedSide = dockedSide,
++                            onLaunchGame = onLaunchGame,
++                            swapTargetValue = 40.dp,
++                            pickUpScale = { 1f },
++                            toAccountManageScreen = toAccountManageScreen,
++                            toVersionManageScreen = toVersionManageScreen,
++                            toVersionSettingsScreen = toVersionSettingsScreen
++                        )
++                    }
++                }
++            } else {
+             // 内容区域
+             Row(modifier = Modifier.fillMaxSize()) {
+                 // ActionMenu 对接到了 Start，留出空位
+@@ -251,6 +294,7 @@ fun LauncherScreen(
+                     )
+                 }
+             }
++            } //Pocket Client: end of landscape layout
+         }
+     }
+ }
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 index 798967a..660ae18 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
