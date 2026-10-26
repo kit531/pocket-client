@@ -137,24 +137,35 @@ jobs:
           python3 -m pip install --quiet --break-system-packages bsdiff4
           apk=$(ls zl2/ZalithLauncher/build/outputs/apk/debug/*.apk | head -1)
           export NOTES="$(git log -1 --pretty=%s)"
+          # Patches from the two newest published builds (read from the releases themselves, so a broken
+          # pc_update.json never stops patches from being made).
           prev_args=""
-          if gh release download v2-update -p pc_update.json -D prev 2>/dev/null; then
-            prev_code=$(python3 -c "import json;print(json.load(open('prev/pc_update.json'))['code'])")
-            if gh release download "v2-${prev_code}" -p "PocketClient2-${ABI}.apk" -D prev; then
-              prev_args="prev/pc_update.json prev/PocketClient2-${ABI}.apk"
+          for tag in $(gh api "repos/$REPO/releases?per_page=50" --jq '.[].tag_name' | grep -E '^v2-[0-9]+$' | sort -t- -k2 -n -r | head -2); do
+            code_prev=${tag#v2-}
+            if gh release download "$tag" -p "PocketClient2-${ABI}.apk" -D "prev/$code_prev"; then
+              prev_args="$prev_args $code_prev=prev/$code_prev/PocketClient2-${ABI}.apk"
             fi
-          fi
+          done
           python3 .github/scripts/publish-v2-update.py "$apk" release2 $prev_args
           gh release create "v2-${VERSION_CODE}" release2/PocketClient2-* \
             --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "Pocket Client 2 ${VERSION_NAME}" \
             --notes "Pocket Client 2 (Zalith Launcher 2 base, Minecraft 1.21 - 26.x). Installs as an update over Pocket Client. ${NOTES}"
-          if ! gh release view v2-update >/dev/null 2>&1; then
+          if ! gh api "repos/$REPO/releases/tags/v2-update" >/dev/null 2>&1; then
             gh release create v2-update --target "$GITHUB_SHA" --prerelease --latest=false \
               --title "Pocket Client 2 update channel" \
               --notes "Holds pc_update.json for the in-app updater. Do not delete."
           fi
-          gh release upload v2-update release2/pc_update.json --clobber
+          # Replace pc_update.json: delete the old asset, then upload with retries.
+          rid=$(gh api "repos/$REPO/releases/tags/v2-update" --jq .id)
+          for aid in $(gh api "repos/$REPO/releases/$rid/assets" --jq '.[] | select(.name=="pc_update.json") | .id'); do
+            gh api -X DELETE "repos/$REPO/releases/assets/$aid"
+          done
+          for attempt in 1 2 3; do
+            if gh release upload v2-update release2/pc_update.json; then break; fi
+            echo "Upload attempt $attempt failed, retrying"; sleep 10
+            [ "$attempt" = 3 ] && exit 1
+          done
 
       - name: Upload APK
         uses: actions/upload-artifact@v7

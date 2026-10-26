@@ -914,7 +914,7 @@ index 0000000..a48bc1a
 +        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index e31d4e4..3377dae 100644
+index e31d4e4..e263474 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 @@ -67,7 +67,7 @@ object AllSettings : SettingsRegistry() {
@@ -926,7 +926,7 @@ index e31d4e4..3377dae 100644
  
      /**
       * 分辨率规则
-@@ -92,12 +92,12 @@ object AllSettings : SettingsRegistry() {
+@@ -92,12 +92,15 @@ object AllSettings : SettingsRegistry() {
      /**
       * 持续性能模式
       */
@@ -938,6 +938,9 @@ index e31d4e4..3377dae 100644
       */
 -    val requestMaxRefreshRate = boolSetting("requestMaxRefreshRate", true)
 +    val requestMaxRefreshRate = boolSetting("requestMaxRefreshRate", false) //Pocket Client: forcing 120 Hz costs a lot of battery
++
++    /** Pocket Client: show the game through a SurfaceView (no extra GPU copy per frame) */
++    val pcUseSurfaceView = boolSetting("pcUseSurfaceView", true)
  
      /**
       * 使用系统的 Vulkan 驱动
@@ -977,10 +980,19 @@ index 517ae8e..1b7399b 100644
              try {
                  val success = launcherUpgradeViewModel.checkManually(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
-index 7c61ffd..10e5e24 100644
+index 7c61ffd..392afc8 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
-@@ -764,6 +764,11 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+@@ -633,6 +633,8 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+         lastWindowSize = newSize
+ 
+         gameTextureView?.surfaceTexture?.setDefaultBufferSize(newSize.width, newSize.height)
++        //Pocket Client: SurfaceView buffer size; the display hardware scales it up to the view
++        gameSurfaceView?.let { view -> view.post { view.holder.setFixedSize(newSize.width, newSize.height) } }
+         ZLBridgeStates.onWindowChange()
+         CallbackBridge.sendUpdateWindowSize(newSize.width, newSize.height)
+         if (SdlBridge.sdlEnabled) {
+@@ -764,6 +766,11 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
              requestedRefreshRate = 0f
              setPreferredDisplayModeId(0)
              clearSurfaceFrameRate()
@@ -992,6 +1004,138 @@ index 7c61ffd..10e5e24 100644
              return
          }
          val best = maxRefreshRateMode(display)
+@@ -816,10 +823,44 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+     }
+ 
+     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+-        val nativeSurface = Surface(surface)
++        onGameSurfaceAvailable(Surface(surface), surface, width, height) { Surface(surface) }
++    }
++
++    /**
++     * Pocket Client: the game view can be a SurfaceView instead of a TextureView. A TextureView makes the GPU
++     * copy every game frame into the app window; a SurfaceView hands frames straight to the display
++     * compositor (often a hardware overlay) and scales the lower render resolution in hardware.
++     */
++    private var gameSurfaceView: android.view.SurfaceView? = null
++
++    private val gameSurfaceCallback = object : android.view.SurfaceHolder.Callback {
++        override fun surfaceCreated(holder: android.view.SurfaceHolder) {
++            val frame = holder.surfaceFrame
++            onGameSurfaceAvailable(holder.surface, holder, frame.width(), frame.height()) { holder.surface }
++        }
++
++        override fun surfaceChanged(holder: android.view.SurfaceHolder, format: Int, width: Int, height: Int) {
++            onGameSurfaceSizeChanged(width, height)
++        }
++
++        override fun surfaceDestroyed(holder: android.view.SurfaceHolder) {
++            onGameSurfaceDestroyed(holder)
++        }
++    }
++
++    private fun gameViewParent(): ViewGroup? =
++        ((gameSurfaceView as android.view.View?) ?: gameTextureView)?.parent as? ViewGroup
++
++    private fun onGameSurfaceAvailable(
++        nativeSurface: Surface,
++        source: Any,
++        width: Int,
++        height: Int,
++        executeSurface: () -> Surface
++    ) {
+         gameSurface = nativeSurface
+         applyMaxRefreshRatePolicy()
+-        SdlBridge.prepareSurface(this, nativeSurface, gameTextureView?.parent as? ViewGroup, surface)
++        SdlBridge.prepareSurface(this, nativeSurface, gameViewParent(), source)
+         //游戏请求 GLFW direct gamepad 时的通知接收方
+         CallbackBridge.setDirectGamepadEnableHandler {
+             LoggerBridge.append("ZalithLauncher: Direct gamepad handler enabled")
+@@ -840,7 +881,7 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+             val currentSize = refreshWindowSize(screenSize = screenSize)
+             withHandler {
+                 execute(
+-                    surface = Surface(surface),
++                    surface = executeSurface(),
+                     screenSize = currentSize,
+                     scope = lifecycleScope
+                 )
+@@ -849,21 +890,29 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+     }
+ 
+     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
++        onGameSurfaceSizeChanged(width, height)
++    }
++
++    private fun onGameSurfaceSizeChanged(width: Int, height: Int) {
+         if (withHandler { mIsSurfaceDestroyed }) return
+         requestRefreshWindowSize(screenSize = referenceScreenSize(fallback = IntSize(width, height)))
+     }
+ 
+     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
++        onGameSurfaceDestroyed(surface)
++        return true
++    }
++
++    private fun onGameSurfaceDestroyed(source: Any) {
+         gameSurface = null
+         val nativeSurface = SDLSurface.getNativeSurface()
+-        if (SdlBridge.beginSurfaceDestroy(surface, nativeSurface)) {
++        if (SdlBridge.beginSurfaceDestroy(source, nativeSurface)) {
+             if (SdlBridge.sdlEnabled) {
+                 SDLActivity.getSDLSurface()?.surfaceDestroyed()
+             }
+             SdlBridge.unregisterSurface(nativeSurface)
+         }
+         withHandler { mIsSurfaceDestroyed = true }
+-        return true
+     }
+ 
+     override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+@@ -919,21 +968,30 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
+                         IntOffset(0, -bottomPadding)
+                     },
+                 factory = { context ->
+-                    TextureView(context).apply {
+-                        isOpaque = true
+-                        alpha = 1.0f
+-                        surfaceTextureListener = this@VMActivity
+-                        setOnApplyWindowInsetsListener { v, insets ->
+-                            if (SdlBridge.sdlEnabled && Build.VERSION.SDK_INT >= 30) {
+-                                SDLActivity.notifyImeVisibilityChanged(
+-                                    insets.isVisible(AndroidWindowInsets.Type.ime())
+-                                )
+-                            }
+-                            v.onApplyWindowInsets(insets)
++                    val gameView: android.view.View = if (AllSettings.pcUseSurfaceView.getValue()) {
++                        //Pocket Client: efficient display path (see gameSurfaceCallback)
++                        android.view.SurfaceView(context).also { surfaceView ->
++                            surfaceView.holder.addCallback(gameSurfaceCallback)
++                            gameSurfaceView = surfaceView
++                        }
++                    } else {
++                        TextureView(context).apply {
++                            isOpaque = true
++                            alpha = 1.0f
++                            surfaceTextureListener = this@VMActivity
++                        }.also { texture ->
++                            gameTextureView = texture
++                        }
++                    }
++                    gameView.setOnApplyWindowInsetsListener { v, insets ->
++                        if (SdlBridge.sdlEnabled && Build.VERSION.SDK_INT >= 30) {
++                            SDLActivity.notifyImeVisibilityChanged(
++                                insets.isVisible(AndroidWindowInsets.Type.ime())
++                            )
+                         }
+-                    }.also { texture ->
+-                        gameTextureView = texture
++                        v.onApplyWindowInsets(insets)
+                     }
++                    gameView
+                 }
+             )
+ 
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 index 1762895..b3b6428 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
@@ -1063,6 +1207,25 @@ index 1762895..b3b6428 100644
          }
      }
  }
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
+index 4f13ce7..d77ab6f 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
+@@ -315,6 +315,14 @@ fun RendererSettingsScreen(
+                         summary = stringResource(R.string.settings_renderer_sustained_performance_summary)
+                     )
+ 
++                    SwitchSettingsCard(
++                        modifier = Modifier.fillMaxWidth(),
++                        position = CardPosition.Middle,
++                        unit = AllSettings.pcUseSurfaceView,
++                        title = stringResource(R.string.settings_pc_surfaceview_title),
++                        summary = stringResource(R.string.settings_pc_surfaceview_summary)
++                    )
++
+                     SwitchSettingsCard(
+                         modifier = Modifier.fillMaxWidth(),
+                         position = CardPosition.Middle,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 index 798967a..660ae18 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
@@ -1077,3 +1240,16 @@ index 798967a..660ae18 100644
              )
          }
      }
+diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
+index 7ad1ae1..e28bdf1 100644
+--- a/ZalithLauncher/src/main/res/values/strings.xml
++++ b/ZalithLauncher/src/main/res/values/strings.xml
+@@ -1732,6 +1732,8 @@
+     <!-- Summary of the game fullscreen switch in the Renderer settings tab -->
+     <string name="settings_renderer_full_screen_summary">Enable fullscreen mode, ignoring safe areas like notches and punch-holes</string>
+     <!-- Switch title in the Renderer settings tab to enable the sustained performance mode -->
++    <string name="settings_pc_surfaceview_title">Efficient display (SurfaceView)</string>
++    <string name="settings_pc_surfaceview_summary">Sends game frames straight to the screen without an extra GPU copy, which saves battery. Turn off if the game screen stays black.</string>
+     <string name="settings_renderer_sustained_performance_title">Sustained Performance Mode</string>
+     <!-- Summary of the sustained performance mode switch in the Renderer settings tab -->
+     <string name="settings_renderer_sustained_performance_summary">When enabled, the system provides more stable performance for the game, suitable for long play sessions, but may slightly reduce device responsiveness to prevent overheating</string>
