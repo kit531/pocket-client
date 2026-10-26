@@ -1388,76 +1388,252 @@ index 7c61ffd3..006081be 100644
              )
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-index 1762895f..b3b6428c 100644
+index 1762895f..2fe30927 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.Row
+@@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.PaddingValues
+ import androidx.compose.foundation.layout.Row
  import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxHeight
  import androidx.compose.foundation.layout.fillMaxSize
  import androidx.compose.foundation.layout.fillMaxWidth
 +import androidx.compose.foundation.layout.height
  import androidx.compose.foundation.layout.offset
  import androidx.compose.foundation.layout.padding
  import androidx.compose.foundation.layout.size
-@@ -185,6 +186,50 @@ fun LauncherScreen(
+@@ -128,8 +130,7 @@ fun LauncherScreen(
+     startGuideOnce: (GuideKeys.Keys) -> Unit,
+ ) {
+     LaunchedEffect(Unit) {
+-        //发起新手引导
+-        startGuideOnce(GuideKeys.Main)
++        //Pocket Client: no guide here, it points at the card grid and side menu the simple home does not have
+     }
+ 
+     BaseScreen(
+@@ -185,72 +186,16 @@ fun LauncherScreen(
                  }
              }
  
-+            //read here: BoxWithConstraints' maxHeight is not reachable inside the Column scope below
-+            val portraitMenuHeight = minOf(maxHeight * 0.4f, 320.dp)
-+            if (maxHeight > maxWidth) {
-+                //Pocket Client: portrait home screen. Cards on top, the action menu (account, version,
-+                //launch) docked full-width at the bottom instead of a narrow side column.
-+                Column(modifier = Modifier.fillMaxSize()) {
-+                    CompositionLocalProvider(
-+                        LocalUriHandler provides object : UriHandler {
-+                            override fun openUri(uri: String) {
-+                                onOpenLink(uri)
-+                            }
-+                        }
-+                    ) {
-+                        ContentMenu(
-+                            modifier = Modifier
-+                                .weight(1f)
-+                                .fillMaxWidth(),
-+                            isVisible = isVisible,
-+                            onLaunchGame = { version ->
-+                                onLaunchGame(version)
-+                            },
-+                            onQuickPlayServer = onQuickPlayServer,
-+                            onOpenVersionSettings = navigateToVersions
-+                        )
-+                    }
-+                    CompositionLocalProvider(LocalActionMenuDrag provides dragState) {
-+                        ActionMenu(
-+                            modifier = Modifier
-+                                .fillMaxWidth()
-+                                .height(portraitMenuHeight)
-+                                .padding(ActionMenuOuterPadding),
-+                            isVisible = isVisible,
-+                            isTaller = false,
-+                            dockedSide = dockedSide,
-+                            onLaunchGame = onLaunchGame,
-+                            swapTargetValue = 40.dp,
-+                            pickUpScale = { 1f },
-+                            toAccountManageScreen = toAccountManageScreen,
-+                            toVersionManageScreen = toVersionManageScreen,
-+                            toVersionSettingsScreen = toVersionSettingsScreen
-+                        )
-+                    }
-+                }
-+            } else {
-             // 内容区域
-             Row(modifier = Modifier.fillMaxSize()) {
-                 // ActionMenu 对接到了 Start，留出空位
-@@ -251,6 +296,7 @@ fun LauncherScreen(
-                     )
-                 }
-             }
-+            } //Pocket Client: end of landscape layout
+-            // 内容区域
+-            Row(modifier = Modifier.fillMaxSize()) {
+-                // ActionMenu 对接到了 Start，留出空位
+-                if (dockedSide == ActionMenuSide.START) {
+-                    Spacer(modifier = Modifier.weight(ActionMenuWeight))
+-                }
+-
+-                CompositionLocalProvider(
+-                    LocalUriHandler provides object : UriHandler {
+-                        override fun openUri(uri: String) {
+-                            onOpenLink(uri)
+-                        }
+-                    }
+-                ) {
+-                ContentMenu(
+-                    modifier = Modifier
+-                        .guideNode(
+-                            key = GuideKeys.Main.Step.CardTip,
+-                            holeRadius = 0.dp
+-                        )
+-                        .weight(ContentWeight)
+-                        .offset { IntOffset(x = dragState.previewShift.value.roundToInt(), y = 0) },
+-                    isVisible = isVisible,
+-                    onLaunchGame = { version ->
+-                        onLaunchGame(version)
+-                    },
+-                    onQuickPlayServer = onQuickPlayServer,
+-                    onOpenVersionSettings = navigateToVersions
+-                )
+-                }
+-
+-                // ActionMenu 对接到了 End，留出空位
+-                if (dockedSide == ActionMenuSide.END) {
+-                    Spacer(modifier = Modifier.weight(ActionMenuWeight))
+-                }
+-            }
+-
+-            val isActionMenuTaller = maxHeight >= 600.dp
+-            CompositionLocalProvider(LocalActionMenuDrag provides dragState) {
+-                Box(
+-                    modifier = Modifier
+-                        .offset {
+-                            val translation = if (dragState.floating) {
+-                                dragState.cardPosition
+-                            } else {
+-                                dragState.landingOf(effectiveSide) + dragState.settleOffset.value
+-                            }
+-                            val x = if (isRtl) parentWidthPx - cardWidth.toPx() - translation.x else translation.x
+-                            IntOffset(x.roundToInt(), translation.y.roundToInt())
+-                        }
+-                        .size(cardWidth, cardHeight)
+-                ) {
+-                    ActionMenu(
+-                        modifier = Modifier.fillMaxSize(),
+-                        isVisible = isVisible,
+-                        isTaller = isActionMenuTaller,
+-                        dockedSide = dockedSide,
+-                        onLaunchGame = onLaunchGame,
+-                        swapTargetValue = if (dockedSide == ActionMenuSide.END) 40.dp else (-40).dp,
+-                        pickUpScale = { dragState.scale },
+-                        toAccountManageScreen = toAccountManageScreen,
+-                        toVersionManageScreen = toVersionManageScreen,
+-                        toVersionSettingsScreen = toVersionSettingsScreen
+-                    )
+-                }
+-            }
++            //Pocket Client: one simple home screen for both orientations: the player's skin, the account,
++            //the version and a big launch button. The card grid and the draggable side menu are gone.
++            PocketHome(
++                isPortrait = maxHeight > maxWidth,
++                isVisible = isVisible,
++                onLaunchGame = onLaunchGame,
++                toAccountManageScreen = toAccountManageScreen,
++                toVersionManageScreen = toVersionManageScreen,
++                toVersionSettingsScreen = toVersionSettingsScreen
++            )
          }
      }
  }
+@@ -484,13 +429,17 @@ private fun VersionsContent(
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .padding(PaddingValues(horizontal = 12.dp))
+-                .padding(bottom = 8.dp),
++                .padding(bottom = 12.dp)
++                .height(56.dp), //Pocket Client: a big launch button that is easy to hit with a thumb
+             elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp),
+             onClick = {
+                 onLaunchGame(null)
+             },
+             content = {
+-                MarqueeText(text = stringResource(R.string.main_launch_game))
++                MarqueeText(
++                    text = stringResource(R.string.main_launch_game),
++                    style = MaterialTheme.typography.titleMedium
++                )
+             }
+         )
+     }
+@@ -754,3 +703,118 @@ private fun VersionManagerLayout(
+         }
+     }
+ }
++
++/**
++ * Pocket Client: the simple home screen. Portrait stacks the skin above the account and version cards;
++ * landscape puts the skin on one side and the cards on the other, so both fill the screen evenly.
++ */
++@Composable
++private fun PocketHome(
++    isPortrait: Boolean,
++    isVisible: Boolean,
++    onLaunchGame: (Version?) -> Unit,
++    toAccountManageScreen: () -> Unit,
++    toVersionManageScreen: () -> Unit,
++    toVersionSettingsScreen: () -> Unit,
++) {
++    val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
++    val yOffset by swapAnimateDpAsState(
++        targetValue = 40.dp,
++        swapIn = isVisible
++    )
++
++    val cards: @Composable (Modifier) -> Unit = { modifier ->
++        Column(
++            modifier = modifier,
++            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
++        ) {
++            BackgroundCard(
++                modifier = Modifier.fillMaxWidth(),
++                shape = MaterialTheme.shapes.extraLarge,
++                onClick = toAccountManageScreen
++            ) {
++                AccountAvatarRow(
++                    modifier = Modifier.fillMaxWidth(),
++                    account = account,
++                )
++            }
++            BackgroundCard(
++                modifier = Modifier.fillMaxWidth(),
++                shape = MaterialTheme.shapes.extraLarge,
++            ) {
++                VersionsContent(
++                    modifier = Modifier.fillMaxWidth(),
++                    onLaunchGame = onLaunchGame,
++                    toVersionManageScreen = toVersionManageScreen,
++                    toVersionSettingsScreen = toVersionSettingsScreen,
++                )
++            }
++        }
++    }
++
++    val contentModifier = Modifier
++        .fillMaxSize()
++        .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
++        .padding(16.dp)
++
++    if (isPortrait) {
++        Column(
++            modifier = contentModifier,
++            verticalArrangement = Arrangement.spacedBy(12.dp)
++        ) {
++            PocketSkin(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxWidth(),
++                account = account
++            )
++            cards(Modifier.fillMaxWidth())
++        }
++    } else {
++        Row(
++            modifier = contentModifier,
++            horizontalArrangement = Arrangement.spacedBy(16.dp)
++        ) {
++            PocketSkin(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxHeight(),
++                account = account
++            )
++            cards(
++                Modifier
++                    .weight(1f)
++                    .fillMaxHeight()
++            )
++        }
++    }
++}
++
++@Composable
++private fun PocketSkin(
++    modifier: Modifier = Modifier,
++    account: Account?,
++) {
++    val refreshWardrobe by AccountsManager.refreshWardrobe.collectAsStateWithLifecycle()
++    val armModel = account?.skinModelType?.toArmModel()
++    val skinStamp = account?.getSkinFile()?.lastModified()
++    val capeStamp = account?.getCapeFile()?.lastModified()
++    val skinBytes by produceState<ByteArray?>(null, account, refreshWardrobe, skinStamp) {
++        value = account?.getSkinFile()?.takeIf { it.exists() }
++            ?.inputStream()?.use { it.readBytes() }
++    }
++    val capeBytes by produceState<ByteArray?>(null, account, refreshWardrobe, capeStamp) {
++        value = account?.getCapeFile()?.takeIf { it.exists() }
++            ?.inputStream()?.use { it.readBytes() }
++    }
++
++    PetModelView(
++        modifier = modifier,
++        skin = skinBytes,
++        cape = capeBytes,
++        arm = armModel,
++        animation = PetAnimation.Idle,
++        tapReaction = PetTapReaction.Interact,
++        dragYaw = true
++    )
++}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
 index 1fb77115..ed5a19af 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
