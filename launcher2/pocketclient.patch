@@ -43,6 +43,486 @@ index b0f3e16..90d5ed1 100644
  
  # your OAuth client id
  #oauth_client_id=xxx
+diff --git a/ZalithLauncher/src/main/AndroidManifest.xml b/ZalithLauncher/src/main/AndroidManifest.xml
+index 8b715c9..9ea4b27 100644
+--- a/ZalithLauncher/src/main/AndroidManifest.xml
++++ b/ZalithLauncher/src/main/AndroidManifest.xml
+@@ -8,6 +8,7 @@
+         android:required="false" />
+ 
+     <uses-permission android:name="android.permission.INTERNET" />
++    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
+index da9fa2a..fa2a80b 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
+@@ -86,6 +86,15 @@ private const val TENANT = "/consumers"
+  */
+ private const val MAX_CONSECUTIVE_POLL_FAILURES = 5
+ 
++/**
++ * Pocket Client: builds without an Azure app ID (OAUTH_CLIENT_ID) sign in through login.live.com with the
++ * public Minecraft launcher client ID, the same one Pocket Client 1 used. The device-code flow works there too.
++ */
++private const val LIVE_CLIENT_ID = "00000000402b5328"
++private const val LIVE_SCOPE = "service::user.auth.xboxlive.com::MBI_SSL"
++private val useLiveLogin: Boolean get() = BuildKeys.OAUTH_CLIENT_ID.isBlank()
++private val clientId: String get() = if (useLiveLogin) LIVE_CLIENT_ID else BuildKeys.OAUTH_CLIENT_ID
++
+ const val MICROSOFT_AUTH_URL = "https://login.microsoftonline.com"
+ const val LIVE_AUTH_URL = "https://login.live.com"
+ const val XBL_AUTH_URL = "https://user.auth.xboxlive.com"
+@@ -98,14 +107,26 @@ const val MINECRAFT_SERVICES_URL = "https://api.minecraftservices.com"
+  */
+ suspend fun fetchDeviceCodeResponse(context: CoroutineContext): DeviceCodeResponse = coroutineScope {
+     withRetry {
+-        submitForm(
+-            url = "$MICROSOFT_AUTH_URL$TENANT/oauth2/v2.0/devicecode",
+-            parameters = Parameters.build {
+-                append("client_id", BuildKeys.OAUTH_CLIENT_ID)
+-                append("scope", SCOPES.joinToString(" "))
+-            },
+-            context = context
+-        )
++        if (useLiveLogin) {
++            submitForm(
++                url = "$LIVE_AUTH_URL/oauth20_connect.srf",
++                parameters = Parameters.build {
++                    append("client_id", LIVE_CLIENT_ID)
++                    append("scope", LIVE_SCOPE)
++                    append("response_type", "device_code")
++                },
++                context = context
++            )
++        } else {
++            submitForm(
++                url = "$MICROSOFT_AUTH_URL$TENANT/oauth2/v2.0/devicecode",
++                parameters = Parameters.build {
++                    append("client_id", BuildKeys.OAUTH_CLIENT_ID)
++                    append("scope", SCOPES.joinToString(" "))
++                },
++                context = context
++            )
++        }
+     }
+ }
+ 
+@@ -137,12 +158,12 @@ suspend fun getTokenResponse(
+ 
+         try {
+             val response: JsonObject = submitForm(
+-                "$MICROSOFT_AUTH_URL$TENANT/oauth2/v2.0/token",
++                if (useLiveLogin) "$LIVE_AUTH_URL/oauth20_token.srf" else "$MICROSOFT_AUTH_URL$TENANT/oauth2/v2.0/token",
+                 parameters = Parameters.build {
+                     append("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
+                     append("device_code", codeResponse.deviceCode)
+-                    append("client_id", BuildKeys.OAUTH_CLIENT_ID)
+-                    append("tenant", TENANT)
++                    append("client_id", clientId)
++                    if (!useLiveLogin) append("tenant", TENANT)
+                 },
+                 context = context
+             )
+@@ -271,9 +292,10 @@ private suspend fun refreshAccessToken(
+             val response = submitForm<JsonObject>(
+                 url = "$LIVE_AUTH_URL/oauth20_token.srf",
+                 parameters = Parameters.build {
+-                    append("client_id", BuildKeys.OAUTH_CLIENT_ID)
++                    append("client_id", clientId)
+                     append("refresh_token", refreshToken)
+                     append("grant_type", "refresh_token")
++                    if (useLiveLogin) append("scope", LIVE_SCOPE)
+                 },
+                 context = context
+             )
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
+index f1a7854..9acf1cc 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
+@@ -34,5 +34,5 @@ data class DeviceCodeResponse(
+     @SerialName("interval")
+     val interval: Int,
+     @SerialName("message")
+-    val message: String
++    val message: String = "" //Pocket Client: login.live.com does not send a message
+ )
+\ No newline at end of file
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
+new file mode 100644
+index 0000000..94817a8
+--- /dev/null
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
+@@ -0,0 +1,118 @@
++package com.movtery.zalithlauncher.pocket
++
++import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
++import java.io.BufferedInputStream
++import java.io.BufferedOutputStream
++import java.io.EOFException
++import java.io.File
++import java.io.FileInputStream
++import java.io.FileOutputStream
++import java.io.IOException
++import java.io.InputStream
++import java.io.RandomAccessFile
++
++/**
++ * Pocket Client: streaming bspatch (BSDIFF40 format, as written by the standard `bsdiff` tool).
++ * Rebuilds the new APK from the installed one plus a small patch, without loading either into memory.
++ */
++object BsPatch {
++    private const val BUF = 1 shl 16
++
++    @Throws(IOException::class)
++    fun apply(oldFile: File, patchFile: File, newFile: File) {
++        val header = ByteArray(32)
++        RandomAccessFile(patchFile, "r").use { it.readFully(header) }
++        if (String(header, 0, 8, Charsets.US_ASCII) != "BSDIFF40") throw IOException("Not a bsdiff patch")
++        val ctrlLen = offtin(header, 8)
++        val diffLen = offtin(header, 16)
++        val newSize = offtin(header, 24)
++        if (ctrlLen < 0 || diffLen < 0 || newSize < 0) throw IOException("Corrupt patch header")
++
++        openSection(patchFile, 32).use { ctrl ->
++            openSection(patchFile, 32 + ctrlLen).use { diff ->
++                openSection(patchFile, 32 + ctrlLen + diffLen).use { extra ->
++                    RandomAccessFile(oldFile, "r").use { old ->
++                        BufferedOutputStream(FileOutputStream(newFile), BUF).use { out ->
++                            patch(ctrl, diff, extra, old, out, newSize)
++                        }
++                    }
++                }
++            }
++        }
++    }
++
++    private fun patch(
++        ctrl: InputStream, diff: InputStream, extra: InputStream,
++        old: RandomAccessFile, out: BufferedOutputStream, newSize: Long
++    ) {
++        val oldSize = old.length()
++        val buf = ByteArray(BUF)
++        val oldBuf = ByteArray(BUF)
++        val num = ByteArray(8)
++        var newPos = 0L
++        var oldPos = 0L
++
++        while (newPos < newSize) {
++            readFully(ctrl, num, 8); val x = offtin(num, 0)
++            readFully(ctrl, num, 8); val y = offtin(num, 0)
++            readFully(ctrl, num, 8); val z = offtin(num, 0)
++            if (x < 0 || y < 0 || newPos + x > newSize) throw IOException("Corrupt patch")
++
++            var remaining = x
++            while (remaining > 0) {
++                val n = minOf(remaining, BUF.toLong()).toInt()
++                readFully(diff, buf, n)
++                readOld(old, oldSize, oldPos, oldBuf, n)
++                for (i in 0 until n) buf[i] = (buf[i] + oldBuf[i]).toByte()
++                out.write(buf, 0, n)
++                oldPos += n
++                newPos += n
++                remaining -= n
++            }
++
++            if (newPos + y > newSize) throw IOException("Corrupt patch")
++            remaining = y
++            while (remaining > 0) {
++                val n = minOf(remaining, BUF.toLong()).toInt()
++                readFully(extra, buf, n)
++                out.write(buf, 0, n)
++                newPos += n
++                remaining -= n
++            }
++            oldPos += z
++        }
++    }
++
++    /** Old bytes for [pos, pos + n); positions outside the old file count as zero, like bspatch. */
++    private fun readOld(old: RandomAccessFile, oldSize: Long, pos: Long, dst: ByteArray, n: Int) {
++        java.util.Arrays.fill(dst, 0, n, 0)
++        val start = maxOf(pos, 0L)
++        val end = minOf(pos + n, oldSize)
++        if (start < end) {
++            old.seek(start)
++            old.readFully(dst, (start - pos).toInt(), (end - start).toInt())
++        }
++    }
++
++    private fun openSection(file: File, offset: Long): InputStream {
++        val fis = FileInputStream(file)
++        fis.channel.position(offset)
++        return BZip2CompressorInputStream(BufferedInputStream(fis, BUF))
++    }
++
++    private fun readFully(input: InputStream, dst: ByteArray, n: Int) {
++        var off = 0
++        while (off < n) {
++            val r = input.read(dst, off, n - off)
++            if (r < 0) throw EOFException("Unexpected end of patch")
++            off += r
++        }
++    }
++
++    /** bsdiff's sign-magnitude little-endian 64-bit integer. */
++    private fun offtin(b: ByteArray, off: Int): Long {
++        var y = (b[off + 7].toLong() and 0x7F)
++        for (i in 6 downTo 0) y = (y shl 8) or (b[off + i].toLong() and 0xFF)
++        return if ((b[off + 7].toInt() and 0x80) != 0) -y else y
++    }
++}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
+new file mode 100644
+index 0000000..a48bc1a
+--- /dev/null
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
+@@ -0,0 +1,217 @@
++package com.movtery.zalithlauncher.pocket
++
++import android.content.Intent
++import android.util.Log
++import android.widget.Toast
++import androidx.appcompat.app.AlertDialog
++import androidx.appcompat.app.AppCompatActivity
++import androidx.core.content.FileProvider
++import androidx.lifecycle.lifecycleScope
++import com.google.android.material.dialog.MaterialAlertDialogBuilder
++import com.movtery.zalithlauncher.BuildConfig
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
++import org.json.JSONObject
++import java.io.File
++import java.io.FileOutputStream
++import java.io.IOException
++import java.net.HttpURLConnection
++import java.net.URL
++import java.security.MessageDigest
++import java.util.Locale
++
++/**
++ * Pocket Client: self-update from GitHub Releases with small downloads.
++ *
++ * CI publishes pc_update.json on the "v2-update" release. It lists the newest build and a bsdiff patch from
++ * the previous build. When the installed version has a patch, only the patch is downloaded and the new APK
++ * is rebuilt locally from the installed one ([BsPatch]); the result is checked against the full APK's
++ * SHA-256 before Android is asked to install it. Without a matching patch, the full APK is downloaded.
++ */
++object PocketUpdater {
++    private const val TAG = "PocketUpdater"
++    private const val INFO_URL = "https://github.com/kit531/pocket-client/releases/download/v2-update/pc_update.json"
++
++    class Patch(val from: Int, val url: String, val size: Long, val sha256: String)
++    class Info(
++        val code: Int, val name: String, val notes: String,
++        val apkUrl: String, val apkSize: Long, val apkSha256: String,
++        val patches: List<Patch>
++    )
++
++    private var checkedThisRun = false
++
++    /** Checks for an update. [manual] shows "up to date"/error toasts; automatic checks run once per app start. */
++    @JvmStatic
++    fun check(activity: AppCompatActivity, manual: Boolean) {
++        if (!manual) {
++            if (checkedThisRun) return
++            checkedThisRun = true
++        }
++        activity.lifecycleScope.launch {
++            val info = withContext(Dispatchers.IO) {
++                runCatching { parse(httpGetText(INFO_URL)) }
++                    .onFailure { Log.w(TAG, "Update check failed", it) }
++                    .getOrNull()
++            }
++            if (info == null) {
++                if (manual) toast(activity, "Could not check for updates")
++                return@launch
++            }
++            val current = BuildConfig.VERSION_CODE
++            if (info.code <= current) {
++                if (manual) toast(activity, "Pocket Client is up to date")
++                return@launch
++            }
++            val patch = info.patches.firstOrNull { it.from == current }
++            val size = patch?.size ?: info.apkSize
++            val sizeText = String.format(Locale.ROOT, "%.1f MB", size / 1048576.0)
++            val how = if (patch != null) "Download: $sizeText (only what changed)" else "Download: $sizeText (full app)"
++            MaterialAlertDialogBuilder(activity)
++                .setTitle("Update: Pocket Client ${info.name}")
++                .setMessage(info.notes.trim() + "\n\n" + how)
++                .setPositiveButton("Update") { _, _ -> download(activity, info, patch) }
++                .setNegativeButton("Later", null)
++                .show()
++        }
++    }
++
++    private fun download(activity: AppCompatActivity, info: Info, patch: Patch?) {
++        val progress: AlertDialog = MaterialAlertDialogBuilder(activity)
++            .setTitle("Updating Pocket Client")
++            .setMessage("Starting…")
++            .setCancelable(false)
++            .create()
++        progress.show()
++        fun status(text: String) = activity.runOnUiThread { progress.setMessage(text) }
++
++        activity.lifecycleScope.launch {
++            val result = withContext(Dispatchers.IO) {
++                runCatching {
++                    val dir = File(activity.cacheDir, "pc_update").apply { deleteRecursively(); mkdirs() }
++                    val apk = File(dir, "update.apk")
++                    var ready = false
++
++                    if (patch != null) {
++                        ready = runCatching {
++                            val patchFile = File(dir, "update.patch")
++                            downloadTo(patch.url, patchFile) { done -> status("Downloading changes… ${percent(done, patch.size)}") }
++                            if (!sha256(patchFile).equals(patch.sha256, ignoreCase = true)) throw IOException("Patch checksum mismatch")
++                            status("Applying update…")
++                            BsPatch.apply(File(activity.applicationInfo.sourceDir), patchFile, apk)
++                            patchFile.delete()
++                            status("Verifying…")
++                            sha256(apk).equals(info.apkSha256, ignoreCase = true)
++                        }.onFailure { Log.w(TAG, "Patch update failed, falling back to the full APK", it) }
++                            .getOrDefault(false)
++                    }
++
++                    if (!ready) {
++                        downloadTo(info.apkUrl, apk) { done -> status("Downloading… ${percent(done, info.apkSize)}") }
++                        status("Verifying…")
++                        if (!sha256(apk).equals(info.apkSha256, ignoreCase = true)) throw IOException("Download checksum mismatch")
++                    }
++                    apk
++                }
++            }
++            progress.dismiss()
++            result.onSuccess { install(activity, it) }
++                .onFailure {
++                    Log.e(TAG, "Update failed", it)
++                    MaterialAlertDialogBuilder(activity)
++                        .setTitle("Update failed")
++                        .setMessage(it.message ?: it.javaClass.simpleName)
++                        .setPositiveButton(android.R.string.ok, null)
++                        .show()
++                }
++        }
++    }
++
++    private fun install(activity: AppCompatActivity, apk: File) {
++        val uri = FileProvider.getUriForFile(activity, activity.packageName + ".provider", apk)
++        val intent = Intent(Intent.ACTION_VIEW)
++            .setDataAndType(uri, "application/vnd.android.package-archive")
++            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
++        activity.startActivity(intent)
++    }
++
++    private fun parse(json: String): Info {
++        val o = JSONObject(json)
++        val patches = ArrayList<Patch>()
++        o.optJSONArray("patches")?.let { arr ->
++            for (i in 0 until arr.length()) {
++                val p = arr.getJSONObject(i)
++                patches.add(Patch(p.getInt("from"), p.getString("url"), p.getLong("size"), p.getString("sha256")))
++            }
++        }
++        return Info(
++            o.getInt("code"), o.getString("name"), o.optString("notes"),
++            o.getString("apk_url"), o.getLong("apk_size"), o.getString("apk_sha256"),
++            patches
++        )
++    }
++
++    private fun open(url: String): HttpURLConnection {
++        val conn = URL(url).openConnection() as HttpURLConnection
++        conn.instanceFollowRedirects = true
++        conn.connectTimeout = 15000
++        conn.readTimeout = 30000
++        conn.setRequestProperty("User-Agent", "PocketClient/${BuildConfig.VERSION_NAME}")
++        if (conn.responseCode !in 200..299) throw IOException("HTTP ${conn.responseCode} for $url")
++        return conn
++    }
++
++    private fun httpGetText(url: String): String {
++        val conn = open(url)
++        try {
++            return conn.inputStream.bufferedReader().use { it.readText() }
++        } finally {
++            conn.disconnect()
++        }
++    }
++
++    private fun downloadTo(url: String, out: File, onProgress: (Long) -> Unit) {
++        val conn = open(url)
++        try {
++            conn.inputStream.use { input ->
++                FileOutputStream(out).use { output ->
++                    val buf = ByteArray(1 shl 16)
++                    var done = 0L
++                    var lastReport = 0L
++                    while (true) {
++                        val n = input.read(buf)
++                        if (n < 0) break
++                        output.write(buf, 0, n)
++                        done += n
++                        if (done - lastReport > 512 * 1024) {
++                            lastReport = done
++                            onProgress(done)
++                        }
++                    }
++                }
++            }
++        } finally {
++            conn.disconnect()
++        }
++    }
++
++    private fun percent(done: Long, total: Long): String =
++        if (total > 0) "${(done * 100 / total).coerceIn(0, 100)}%" else String.format(Locale.ROOT, "%.1f MB", done / 1048576.0)
++
++    private fun sha256(file: File): String {
++        val md = MessageDigest.getInstance("SHA-256")
++        file.inputStream().use { input ->
++            val buf = ByteArray(1 shl 16)
++            while (true) {
++                val n = input.read(buf)
++                if (n < 0) break
++                md.update(buf, 0, n)
++            }
++        }
++        return md.digest().joinToString("") { "%02x".format(it) }
++    }
++
++    private fun toast(activity: AppCompatActivity, text: String) =
++        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
++}
+diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
+index 517ae8e..5a0433d 100644
+--- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
++++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
+@@ -217,9 +217,8 @@ class MainActivity : BaseAppCompatActivity() {
+ 
+         //检查更新
+         if (!isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
+-            lifecycleScope.launch {
+-                launcherUpgradeViewModel.checkOnAppStart()
+-            }
++            //Pocket Client: updates come from kit531/pocket-client with small patch downloads
++            com.movtery.zalithlauncher.pocket.PocketUpdater.check(this, manual = false)
+         }
+ 
+         //错误信息展示
+@@ -572,6 +571,9 @@ class MainActivity : BaseAppCompatActivity() {
+      * 检查启动器更新
+      */
+     private fun checkUpdate() {
++        //Pocket Client: our own update source instead of the upstream Zalith Launcher 2 releases
++        com.movtery.zalithlauncher.pocket.PocketUpdater.check(this, manual = true)
++        if (true) return
+         lifecycleScope.launch(Dispatchers.IO) {
+             try {
+                 val success = launcherUpgradeViewModel.checkManually(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 index 798967a..660ae18 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
