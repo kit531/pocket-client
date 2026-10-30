@@ -1,5 +1,5 @@
 diff --git a/ZalithLauncher/build.gradle.kts b/ZalithLauncher/build.gradle.kts
-index ada8a5d1..c268538f 100644
+index ada8a5d..c268538 100644
 --- a/ZalithLauncher/build.gradle.kts
 +++ b/ZalithLauncher/build.gradle.kts
 @@ -56,16 +56,17 @@ android {
@@ -27,7 +27,7 @@ index ada8a5d1..c268538f 100644
          targetSdk = 34
          versionCode = launcherVersionCode
 diff --git a/ZalithLauncher/gradle.properties b/ZalithLauncher/gradle.properties
-index b0f3e16c..90d5ed17 100644
+index b0f3e16..90d5ed1 100644
 --- a/ZalithLauncher/gradle.properties
 +++ b/ZalithLauncher/gradle.properties
 @@ -1,8 +1,8 @@
@@ -44,7 +44,7 @@ index b0f3e16c..90d5ed17 100644
  # your OAuth client id
  #oauth_client_id=xxx
 diff --git a/ZalithLauncher/src/main/AndroidManifest.xml b/ZalithLauncher/src/main/AndroidManifest.xml
-index 8b715c9c..20b7724f 100644
+index 8b715c9..20b7724 100644
 --- a/ZalithLauncher/src/main/AndroidManifest.xml
 +++ b/ZalithLauncher/src/main/AndroidManifest.xml
 @@ -8,6 +8,7 @@
@@ -86,7 +86,7 @@ index 8b715c9c..20b7724f 100644
              android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
              android:screenOrientation="sensorLandscape" />
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
-index edc9af29..254d2618 100644
+index edc9af2..254d261 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/AccountUtils.kt
 @@ -37,6 +37,8 @@ import com.movtery.zalithlauncher.game.account.microsoft.NotPurchasedMinecraftEx
@@ -148,7 +148,7 @@ index edc9af29..254d2618 100644
                  AuthType.Access,
                  tokenResponse.refreshToken,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
-index da9fa2ab..bcf2ed91 100644
+index da9fa2a..bcf2ed9 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/MicrosoftAuthenticator.kt
 @@ -86,6 +86,38 @@ private const val TENANT = "/consumers"
@@ -277,7 +277,7 @@ index da9fa2ab..bcf2ed91 100644
          try {
              requestXblToken("d=$accessToken")
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
-index f1a78543..9acf1cc6 100644
+index f1a7854..9acf1cc 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/account/microsoft/models/DeviceCodeResponse.kt
 @@ -34,5 +34,5 @@ data class DeviceCodeResponse(
@@ -289,7 +289,7 @@ index f1a78543..9acf1cc6 100644
  )
 \ No newline at end of file
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
-index cdf896c9..eb20f610 100644
+index cdf896c..16e6dc9 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/GameLauncher.kt
 @@ -220,6 +220,8 @@ class GameLauncher(
@@ -312,7 +312,7 @@ index cdf896c9..eb20f610 100644
  
          if (version.getVersionInfo()?.hasLoader(ModLoader.NEOFORGE) == true) {
              // 关闭NeoForge 12早期加载屏动画
-@@ -318,7 +324,22 @@ class GameLauncher(
+@@ -318,7 +324,42 @@ class GameLauncher(
       * 如果版本独立设置了运行环境，则直接选定它；
       * 如果版本未设置，则根据全局设置或自动选择
       */
@@ -328,15 +328,35 @@ index cdf896c9..eb20f610 100644
 +        if (version.getJavaRuntime().isNotEmpty()) return picked
 +        val pickedVersion = runCatching { RuntimesManager.loadRuntime(picked).javaVersion }.getOrDefault(0)
 +        if (pickedVersion !in 21..24) return picked
++        //Some mods pin Java exactly (Cobblemon needs "[21]"): running them on 25 stops the game at startup
++        if (modsPinJava()) return picked
 +        return RuntimesManager.getExactJreName(25) ?: picked
 +    }
++
++    /** True when any Fabric mod in this version's mods folder declares a Java requirement that is not ">= N". */
++    private fun modsPinJava(): Boolean = runCatching {
++        val jars = File(version.getGameDir(), "mods").listFiles { f -> f.isFile && f.name.endsWith(".jar") } ?: return false
++        jars.any { jar ->
++            runCatching {
++                java.util.zip.ZipFile(jar).use { zip ->
++                    val entry = zip.getEntry("fabric.mod.json") ?: return@use false
++                    val text = zip.getInputStream(entry).bufferedReader().use { it.readText() }
++                    val depends = com.google.gson.JsonParser.parseString(text).asJsonObject.get("depends")
++                        ?.takeIf { it.isJsonObject }?.asJsonObject?.get("java") ?: return@use false
++                    val ranges = if (depends.isJsonArray) depends.asJsonArray.map { it.asString } else listOf(depends.asString)
++                    //Any range that is not an open ">=N" (or "*") blocks Java 25
++                    ranges.isNotEmpty() && ranges.none { it.trim().startsWith(">=") || it.trim() == "*" }
++                }
++            }.getOrDefault(false)
++        }
++    }.getOrDefault(false)
 +
 +    private fun getRuntimeUpstream(): String {
          val versionRuntime = version.getJavaRuntime().takeIf { it.isNotEmpty() } ?: ""
          if (versionRuntime.isNotEmpty()) return versionRuntime
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
-index cecd42b3..0d4be28d 100644
+index cecd42b..0d4be28 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/game/launch/Launcher.kt
 @@ -347,9 +347,18 @@ abstract class Launcher(
@@ -361,7 +381,7 @@ index cecd42b3..0d4be28d 100644
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 new file mode 100644
-index 00000000..94817a8a
+index 0000000..94817a8
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/BsPatch.kt
 @@ -0,0 +1,118 @@
@@ -485,7 +505,7 @@ index 00000000..94817a8a
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt
 new file mode 100644
-index 00000000..022c9aed
+index 0000000..022c9ae
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketBatteryLog.kt
 @@ -0,0 +1,211 @@
@@ -702,7 +722,7 @@ index 00000000..022c9aed
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt
 new file mode 100644
-index 00000000..192bab14
+index 0000000..192bab1
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketLogin.kt
 @@ -0,0 +1,112 @@
@@ -820,7 +840,7 @@ index 00000000..192bab14
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
 new file mode 100644
-index 00000000..809a00df
+index 0000000..809a00d
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketTuning.kt
 @@ -0,0 +1,203 @@
@@ -1029,7 +1049,7 @@ index 00000000..809a00df
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 new file mode 100644
-index 00000000..a48bc1a6
+index 0000000..a48bc1a
 --- /dev/null
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/pocket/PocketUpdater.kt
 @@ -0,0 +1,217 @@
@@ -1251,7 +1271,7 @@ index 00000000..a48bc1a6
 +        Toast.makeText(activity, text, Toast.LENGTH_SHORT).show()
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
-index e31d4e45..cfd98b5c 100644
+index e31d4e4..cfd98b5 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/setting/AllSettings.kt
 @@ -67,7 +67,7 @@ object AllSettings : SettingsRegistry() {
@@ -1327,7 +1347,7 @@ index e31d4e45..cfd98b5c 100644
      /**
       * 主界面操作菜单的停泊侧
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
-index 517ae8e8..82fd79aa 100644
+index 517ae8e..82fd79a 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/MainActivity.kt
 @@ -57,6 +57,7 @@ import com.movtery.zalithlauncher.notification.NotificationManager
@@ -1383,7 +1403,7 @@ index 517ae8e8..82fd79aa 100644
              try {
                  val success = launcherUpgradeViewModel.checkManually(
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
-index 7c61ffd3..006081be 100644
+index 7c61ffd..006081b 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/activities/VMActivity.kt
 @@ -199,6 +199,9 @@ class VMViewModel : ViewModel() {
@@ -1566,7 +1586,7 @@ index 7c61ffd3..006081be 100644
              )
  
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
-index 8ba528f2..5d68f254 100644
+index 8ba528f..5d68f25 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/AccountManageScreen.kt
 @@ -137,7 +137,9 @@ enum class FirstLoginMenu {
@@ -1598,7 +1618,7 @@ index 8ba528f2..5d68f254 100644
  
          viewModel.effect.collect { effect ->
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
-index 1762895f..9bc8e7d5 100644
+index 1762895..9bc8e7d 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/LauncherScreen.kt
 @@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.Column
@@ -1916,7 +1936,7 @@ index 1762895f..9bc8e7d5 100644
 +    }
 +}
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
-index 1fb77115..ed5a19af 100644
+index 1fb7711..ed5a19a 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/LauncherSettingsScreen.kt
 @@ -184,6 +184,7 @@ fun LauncherSettingsScreen(
@@ -1928,7 +1948,7 @@ index 1fb77115..ed5a19af 100644
                              }
                          },
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
-index 4f13ce72..d825610d 100644
+index 4f13ce7..d825610 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/content/settings/RendererSettingsScreen.kt
 @@ -315,6 +315,22 @@ fun RendererSettingsScreen(
@@ -1955,7 +1975,7 @@ index 4f13ce72..d825610d 100644
                          modifier = Modifier.fillMaxWidth(),
                          position = CardPosition.Middle,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt
-index d10327cd..c576eede 100644
+index d10327c..c576eed 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/main/MainScreen.kt
 @@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.Box
@@ -2206,7 +2226,7 @@ index d10327cd..c576eede 100644
  private fun TopBarRailItem(
      selected: Boolean,
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
-index 798967a3..660ae18a 100644
+index 798967a..660ae18 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/screens/splash/SplashScreen.kt
 @@ -92,7 +92,8 @@ private fun TopBar(
@@ -2220,7 +2240,7 @@ index 798967a3..660ae18a 100644
          }
      }
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt
-index 3254fee3..ea836b33 100644
+index 3254fee..ea836b3 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/ColorTheme.kt
 @@ -39,5 +39,7 @@ enum class ColorThemeType {
@@ -2233,7 +2253,7 @@ index 3254fee3..ea836b33 100644
  }
 \ No newline at end of file
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt
-index 3dec1c67..77448a85 100644
+index 3dec1c6..77448a8 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/NativeThemeUtils.kt
 @@ -210,6 +210,7 @@ private fun getPredefinedSeedColor(theme: ColorThemeType, darkTheme: Boolean): I
@@ -2245,7 +2265,7 @@ index 3dec1c67..77448a85 100644
      }
  }
 diff --git a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt
-index 605edede..5dac14de 100644
+index 605eded..5dac14d 100644
 --- a/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt
 +++ b/ZalithLauncher/src/main/java/com/movtery/zalithlauncher/ui/theme/Theme.kt
 @@ -599,6 +599,47 @@ private fun customDark(
@@ -2313,7 +2333,7 @@ index 605edede..5dac14de 100644
                      color = customColor,
                      style = customPaletteStyle
 diff --git a/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml b/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml
-index 284f6904..f85dd805 100644
+index 284f690..f85dd80 100644
 --- a/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml
 +++ b/ZalithLauncher/src/main/res/drawable/ic_launcher_foreground.xml
 @@ -1,51 +1,22 @@
@@ -2382,7 +2402,7 @@ index 284f6904..f85dd805 100644
 +        android:fillColor="#7CCB3F"/>
  </vector>
 diff --git a/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml b/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml
-index 25c575ca..52493654 100644
+index 25c575c..5249365 100644
 --- a/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml
 +++ b/ZalithLauncher/src/main/res/drawable/ic_launcher_monochrome.xml
 @@ -1,19 +1,9 @@
@@ -2410,7 +2430,7 @@ index 25c575ca..52493654 100644
 +        android:fillColor="#000000"/>
  </vector>
 diff --git a/ZalithLauncher/src/main/res/values/ic_launcher_background.xml b/ZalithLauncher/src/main/res/values/ic_launcher_background.xml
-index 36612b99..176dd5c1 100644
+index 36612b9..176dd5c 100644
 --- a/ZalithLauncher/src/main/res/values/ic_launcher_background.xml
 +++ b/ZalithLauncher/src/main/res/values/ic_launcher_background.xml
 @@ -1,4 +1,4 @@
@@ -2421,7 +2441,7 @@ index 36612b99..176dd5c1 100644
  </resources>
 \ No newline at end of file
 diff --git a/ZalithLauncher/src/main/res/values/strings.xml b/ZalithLauncher/src/main/res/values/strings.xml
-index 7ad1ae13..aa234d8d 100644
+index 7ad1ae1..aa234d8 100644
 --- a/ZalithLauncher/src/main/res/values/strings.xml
 +++ b/ZalithLauncher/src/main/res/values/strings.xml
 @@ -136,6 +136,10 @@
