@@ -1,0 +1,81 @@
+# Offers the Pocket Craft game (kit531/pocket-craft) through Pocket Client 2's in-app updater.
+# Pocket Craft uses the same package and signing key as Pocket Client with a higher versionCode, so the
+# updater's "Update" button installs it over the launcher. This replaces pc_update.json on the "v2-update"
+# release; the next Pocket Client 2 build on main writes its own pc_update.json again.
+name: Offer Pocket Craft update
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "pocket-craft release tag (e.g. build-12); empty = latest"
+        required: false
+  push:
+    branches: [claude/project-thread-3nyjrv]
+    paths:
+      - ".github/workflows/offer-pocket-craft.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pocket-client-2-build
+  cancel-in-progress: false
+
+jobs:
+  offer:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Download Pocket Craft APK
+        run: |
+          set -euo pipefail
+          if [ -n "${TAG:-}" ]; then rel="tags/$TAG"; else rel="latest"; fi
+          gh api "repos/kit531/pocket-craft/releases/$rel" > rel.json
+          tag=$(jq -r .tag_name rel.json)
+          url=$(jq -r '.assets[] | select(.name | endswith(".apk")) | .browser_download_url' rel.json | head -n1)
+          [ -n "$url" ] || { echo "::error::No APK in pocket-craft release $tag"; exit 1; }
+          curl -fsSL --retry 4 -o game.apk "$url"
+          run="${tag#build-}"
+          echo "URL=$url" >> "$GITHUB_ENV"
+          echo "CODE=$((1000000 + run))" >> "$GITHUB_ENV"
+          echo "NAME=Pocket Craft 0.1.$run" >> "$GITHUB_ENV"
+
+      - name: Check package, version and signature
+        run: |
+          set -euo pipefail
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)"
+          badging="$("$BT/aapt2" dump badging game.apk | head -n1)"
+          echo "$badging"
+          grep -q "name='com.movtery.zalithlauncher.debug'" <<<"$badging" || { echo "::error::Wrong package"; exit 1; }
+          grep -q "versionCode='$CODE'" <<<"$badging" || { echo "::error::versionCode is not $CODE"; exit 1; }
+          sha=$("$BT/apksigner" verify --print-certs game.apk | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}')
+          echo "Signer SHA-256: $sha"
+          [ "$sha" = "d0d0886a0d7e3486e6627f9b8011027fe3c6b0fb09424530b6d7be14f8c2cc33" ] || { echo "::error::Not signed with the Pocket Client key"; exit 1; }
+
+      - name: Write pc_update.json
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          jq -n --argjson code "$CODE" --arg name "$NAME" --arg url "$URL" \
+            --argjson size "$(stat -c %s game.apk)" --arg sha "$(sha256sum game.apk | cut -d' ' -f1)" \
+            --arg notes "Pocket Craft: משחק הבלוקים החדש. העדכון מחליף את Pocket Client ומוחק את הקבצים הישנים שלו." \
+            '{code: $code, name: $name, notes: $notes, apk_url: $url, apk_size: $size, apk_sha256: $sha, patches: []}' \
+            > out/pc_update.json
+          cat out/pc_update.json
+
+      - name: Replace pc_update.json on the v2-update release
+        run: |
+          set -euo pipefail
+          rid=$(gh api "repos/$REPO/releases/tags/v2-update" --jq .id)
+          for aid in $(gh api "repos/$REPO/releases/$rid/assets" --jq '.[] | select(.name=="pc_update.json") | .id'); do
+            gh api -X DELETE "repos/$REPO/releases/assets/$aid"
+          done
+          for i in 1 2 3 4; do
+            if gh release upload v2-update out/pc_update.json --repo "$REPO"; then exit 0; fi
+            sleep $((i * 5))
+          done
+          exit 1
